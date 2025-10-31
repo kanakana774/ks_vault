@@ -1,0 +1,250 @@
+{
+  "main": {
+    "id": "a49ce7c1ceb5925a",
+    "type": "split",
+    "children": [
+      {
+        "id": "b8c06a56a7e81781",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "af41e980aea2e300",
+            "type": "leaf",
+            "state": {
+              "type": "markdown",
+              "state": {
+                "file": "SQL研修/SQL研修資料/資料_自分用/講義資料/09.集合演算子.md",
+                "mode": "source",
+                "source": false
+              },
+              "icon": "lucide-file",
+              "title": "09.集合演算子"
+            }
+          },
+          {
+            "id": "28052f19fe31de71",
+            "type": "leaf",
+            "state": {
+              "type": "markdown",
+              "state": {
+                "file": "SQL研修/SQL研修資料/資料_自分用/講義資料/10.サブクエリ.md",
+                "mode": "source",
+                "source": false
+              },
+              "icon": "lucide-file",
+              "title": "10.サブクエリ"
+            }
+          },
+          {
+            "id": "3d201b701e00fc48",
+            "type": "leaf",
+            "state": {
+              "type": "markdown",
+              "state": {
+                "file": "SQL研修/SQL研修資料/資料_自分用/講義資料/09.集合演算子.md",
+                "mode": "source",
+                "source": false
+              },
+              "icon": "lucide-file",
+              "title": "09.集合演算子"
+            }
+          }
+        ],
+        "currentTab": 1
+      }
+    ],
+    "direction": "vertical"
+  },
+  "left": {
+    "id": "a05b98fd564a9921",
+    "type": "split",
+    "children": [
+      {
+        "id": "42382434086c92bf",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "25a0cd577de46247",
+            "type": "leaf",
+            "state": {
+              "type": "file-explorer",
+              "state": {
+                "sortOrder": "alphabetical",
+                "autoReveal": false
+              },
+              "icon": "lucide-folder-closed",
+              "title": "ファイルエクスプローラ"
+            }
+          },
+          {
+            "id": "19bcdd7ca2ad04ef",
+            "type": "leaf",
+            "state": {
+              "type": "search",
+              "state": {
+                "query": "",
+                "matchingCase": false,
+                "explainSearch": false,
+                "collapseAll": false,
+                "extraContext": false,
+                "sortOrder": "alphabetical"
+              },
+              "icon": "lucide-search",
+              "title": "検索"
+            }
+          },
+          {
+            "id": "8fb4c641fcf3c601",
+            "type": "leaf",
+            "state": {
+              "type": "bookmarks",
+              "state": {},
+              "icon": "lucide-bookmark",
+              "title": "ブックマーク"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "horizontal",
+    "width": 300
+  },
+  "right": {
+    "id": "ac97bbc9724b9004",
+    "type": "split",
+    "children": [
+      {
+        "id": "e72c79e7d7be5dc7",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "abaabe2edbd94f6b",
+            "type": "leaf",
+            "state": {
+              "type": "backlink",
+              "state": {
+                "collapseAll": false,
+                "extraContext": false,
+                "sortOrder": "alphabetical",
+                "showSearch": false,
+                "searchQuery": "",
+                "backlinkCollapsed": false,
+                "unlinkedCollapsed": true
+              },
+              "icon": "links-coming-in",
+              "title": "バックリンク"
+            }
+          },
+          {
+            "id": "2947bc9235d299ae",
+            "type": "leaf",
+            "state": {
+              "type": "outgoing-link",
+              "state": {
+                "file": "SQL研修/SQL研修資料/資料_自分用/講義資料/00_正規化.md",
+                "linksCollapsed": false,
+                "unlinkedCollapsed": true
+              },
+              "icon": "links-going-out",
+              "title": "00_正規化からのアウトゴーイングリンク"
+            }
+          },
+          {
+            "id": "fddcdc632ce6d28f",
+            "type": "leaf",
+            "state": {
+              "type": "tag",
+              "state": {
+                "sortOrder": "frequency",
+                "useHierarchy": true,
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-tags",
+              "title": "タグ"
+            }
+          },
+          {
+            "id": "d07234087548e647",
+            "type": "leaf",
+            "state": {
+              "type": "outline",
+              "state": {
+                "file": "SQL研修/SQL研修資料/資料_自分用/講義資料/10.サブクエリ.md",
+                "followCursor": false,
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-list",
+              "title": "10.サブクエリのアウトライン"
+            }
+          },
+          {
+            "id": "441bb6c84c4d9e1c",
+            "type": "leaf",
+            "state": {
+              "type": "calendar",
+              "state": {},
+              "icon": "calendar-with-checkmark",
+              "title": "Calendar"
+            }
+          }
+        ],
+        "currentTab": 3
+      }
+    ],
+    "direction": "horizontal",
+    "width": 300
+  },
+  "left-ribbon": {
+    "hiddenItems": {
+      "switcher:クイックスイッチャーを開く": false,
+      "graph:グラフビューを開く": false,
+      "canvas:新規キャンバスを作成": false,
+      "daily-notes:今日のデイリーノートを開く": false,
+      "templates:テンプレートを挿入": false,
+      "command-palette:コマンドパレットを開く": false,
+      "bases:Create new base": false
+    }
+  },
+  "active": "28052f19fe31de71",
+  "lastOpenFiles": [
+    "SQL研修/SQL研修資料/資料_自分用/講義資料/08_joinの論理実行順.md",
+    "SQL研修/SQL研修資料/資料_自分用/講義資料/09.集合演算子.md",
+    "SQL研修/SQL研修資料/資料_自分用/講義資料/10.サブクエリ.md",
+    "SQL研修/SQL研修資料/資料_自分用/講義資料/08_joinとサブクエリ.md",
+    "SQL研修/SQL研修資料/資料_自分用/講義資料/07_集約関数.md",
+    "SQL研修/SQL研修資料/資料_自分用/講義資料/10.サブクエリの考え方.md",
+    "SQL研修/SQL研修資料/資料_自分用/講義資料/06_CASE式.md",
+    "SQL研修/SQL研修資料/資料_自分用/講義資料/03_関数.md",
+    "SQL研修/SQL研修資料/資料_自分用/講義資料/07_groupByの論理実行順.md",
+    "SQL研修/SQL研修資料/資料_自分用/講義資料/00_正規化.md",
+    "SQL研修/SQL研修資料/資料_自分用/講義資料/01_データ型.md",
+    "SQL研修/SQL研修資料/資料_自分用/講義資料/02_演算子.md",
+    "SQL研修/SQL研修資料/資料_自分用/講義資料/02_CRUDについて.md",
+    "SQL研修/SQL研修資料/資料_自分用/講義資料/01_RDBMSとDDL.md",
+    "SQL研修/SQL研修資料/sql研修_18日ver/~$申請用カリキュラム202511_CTソリューションズ株式会社様_18日ver.xlsx",
+    "SQL研修/SQL研修資料/資料_自分用/講義資料/18_ウィンドウ関数.md",
+    "SQL研修/SQL研修資料/資料_自分用/講義資料/20_CTE（共通テーブル式）.md",
+    "SQL研修/SQL研修資料/資料_自分用/講義資料/PLpgSQL.md",
+    "SQL研修/SQL研修資料/資料_自分用/講義資料/補足_外部結合の条件.md",
+    "SQL研修/SQL研修資料/資料_自分用/講義資料/補足_型変換.md",
+    "SQL研修/SQL研修資料/資料_自分用/講義資料/補足_プロシージャのトランザクション.md",
+    "SQL研修/SQL研修資料/資料_自分用/講義資料/補足_PLpgSQL_例外処理.md",
+    "SQL研修/SQL研修資料/資料_自分用/講義資料/補足_PLpgSQL_動的SQL.md",
+    "SQL研修/SQL研修資料/資料_自分用/講義資料/acid特性.md",
+    "個別対応/村松さん/村松さん11月の予定.md",
+    "個別対応/村松さん/質問テンプレート.md",
+    "SQL研修/SQL研修改善案.md",
+    "個別対応",
+    "個別対応/村松さん",
+    "SQL研修/SQL研修資料/資料_自分用/問題/課題_DB演習_サブクエリ_平松.xlsx",
+    "SQL研修/SQL研修資料/資料_自分用/問題/課題_DB演習_サブクエリ_小池.xlsx",
+    "SQL研修/SQL研修資料/資料_自分用/問題/課題_DB演習_サブクエリ_平松天音.xlsx",
+    "SQL研修/SQL研修資料/資料_自分用/問題/課題_DB演習_サブクエリ.xlsx",
+    "SQL研修/SQL_1か月目_通常研修資料/20.課題用資料/dml/cevia_master.sql",
+    "SQL研修/SQL_1か月目_通常研修資料/20.課題用資料/ddl/create_database.ddl",
+    "SQL研修/SQL_1か月目_通常研修資料/20.課題用資料/ddl/all_table.ddl",
+    "タスク.canvas"
+  ]
+}
