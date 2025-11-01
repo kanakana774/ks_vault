@@ -4,49 +4,35 @@
     "type": "split",
     "children": [
       {
-        "id": "b8c06a56a7e81781",
+        "id": "b94bbbb2f40181ae",
         "type": "tabs",
         "children": [
           {
-            "id": "af41e980aea2e300",
+            "id": "e36965287b7c4eb2",
             "type": "leaf",
             "state": {
               "type": "markdown",
               "state": {
-                "file": "SQL研修/SQL研修資料/資料_自分用/講義資料/09.集合演算子.md",
+                "file": "SQL研修/SQL研修資料/資料_自分用/問題/01.SQLとは、CREATE文.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "09.集合演算子"
+              "title": "01.SQLとは、CREATE文"
             }
           },
           {
-            "id": "28052f19fe31de71",
+            "id": "c2dbc3cb60f9e19d",
             "type": "leaf",
             "state": {
               "type": "markdown",
               "state": {
-                "file": "SQL研修/SQL研修資料/資料_自分用/講義資料/10.サブクエリ.md",
+                "file": "SQL研修/SQL研修資料/資料_自分用/SQL中心の現場.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "10.サブクエリ"
-            }
-          },
-          {
-            "id": "3d201b701e00fc48",
-            "type": "leaf",
-            "state": {
-              "type": "markdown",
-              "state": {
-                "file": "SQL研修/SQL研修資料/資料_自分用/講義資料/09.集合演算子.md",
-                "mode": "source",
-                "source": false
-              },
-              "icon": "lucide-file",
-              "title": "09.集合演算子"
+              "title": "SQL中心の現場"
             }
           }
         ],
@@ -107,7 +93,7 @@
       }
     ],
     "direction": "horizontal",
-    "width": 300
+    "width": 378.51103591918945
   },
   "right": {
     "id": "ac97bbc9724b9004",
@@ -123,6 +109,7 @@
             "state": {
               "type": "backlink",
               "state": {
+                "file": "SQL研修/SQL研修資料/資料_自分用/SQL中心の現場.md",
                 "collapseAll": false,
                 "extraContext": false,
                 "sortOrder": "alphabetical",
@@ -132,7 +119,7 @@
                 "unlinkedCollapsed": true
               },
               "icon": "links-coming-in",
-              "title": "バックリンク"
+              "title": "SQL中心の現場へのバックリンク"
             }
           },
           {
@@ -141,12 +128,12 @@
             "state": {
               "type": "outgoing-link",
               "state": {
-                "file": "SQL研修/SQL研修資料/資料_自分用/講義資料/00_正規化.md",
+                "file": "SQL研修/SQL研修資料/資料_自分用/SQL中心の現場.md",
                 "linksCollapsed": false,
                 "unlinkedCollapsed": true
               },
               "icon": "links-going-out",
-              "title": "00_正規化からのアウトゴーイングリンク"
+              "title": "SQL中心の現場からのアウトゴーイングリンク"
             }
           },
           {
@@ -170,13 +157,13 @@
             "state": {
               "type": "outline",
               "state": {
-                "file": "SQL研修/SQL研修資料/資料_自分用/講義資料/10.サブクエリ.md",
+                "file": "SQL研修/SQL研修資料/資料_自分用/SQL中心の現場.md",
                 "followCursor": false,
                 "showSearch": false,
                 "searchQuery": ""
               },
               "icon": "lucide-list",
-              "title": "10.サブクエリのアウトライン"
+              "title": "SQL中心の現場のアウトライン"
             }
           },
           {
@@ -194,7 +181,7 @@
       }
     ],
     "direction": "horizontal",
-    "width": 300
+    "width": 333.5
   },
   "left-ribbon": {
     "hiddenItems": {
@@ -207,35 +194,35 @@
       "bases:Create new base": false
     }
   },
-  "active": "28052f19fe31de71",
+  "active": "c2dbc3cb60f9e19d",
   "lastOpenFiles": [
-    "SQL研修/SQL研修資料/資料_自分用/講義資料/08_joinの論理実行順.md",
-    "SQL研修/SQL研修資料/資料_自分用/講義資料/09.集合演算子.md",
-    "SQL研修/SQL研修資料/資料_自分用/講義資料/10.サブクエリ.md",
-    "SQL研修/SQL研修資料/資料_自分用/講義資料/08_joinとサブクエリ.md",
-    "SQL研修/SQL研修資料/資料_自分用/講義資料/07_集約関数.md",
-    "SQL研修/SQL研修資料/資料_自分用/講義資料/10.サブクエリの考え方.md",
-    "SQL研修/SQL研修資料/資料_自分用/講義資料/06_CASE式.md",
-    "SQL研修/SQL研修資料/資料_自分用/講義資料/03_関数.md",
-    "SQL研修/SQL研修資料/資料_自分用/講義資料/07_groupByの論理実行順.md",
-    "SQL研修/SQL研修資料/資料_自分用/講義資料/00_正規化.md",
-    "SQL研修/SQL研修資料/資料_自分用/講義資料/01_データ型.md",
-    "SQL研修/SQL研修資料/資料_自分用/講義資料/02_演算子.md",
-    "SQL研修/SQL研修資料/資料_自分用/講義資料/02_CRUDについて.md",
-    "SQL研修/SQL研修資料/資料_自分用/講義資料/01_RDBMSとDDL.md",
+    "無題のファイル 1.md",
+    "SQL研修/SQL研修資料/資料_自分用/SQL中心の現場.md",
+    "SQL研修/SQL研修資料/資料_自分用/iTunes/plpgsql_iTunes/03_for文.md",
+    "SQL研修/SQL研修資料/資料_自分用/iTunes/plpgsql_iTunes/03.for文_補足.md",
+    "SQL研修/SQL研修資料/資料_自分用/iTunes/問題_iTunes_配布用/問題_iTunes.md",
+    "SQL研修/SQL研修資料/資料_自分用/iTunes/総復習問題_iTunes/総復習4.md",
+    "SQL研修/SQL研修資料/資料_自分用/iTunes/総復習問題_iTunes/総復習1.md",
+    "SQL研修/SQL研修資料/資料_自分用/iTunes/実務を意識した問題_iTunes.md",
+    "SQL研修/SQL研修資料/資料_自分用/iTunes/問題_iTunes.md",
+    "SQL研修/SQL研修資料/資料_自分用/iTunes/問題_iTunes_配布用/問題の目的.md",
+    "SQL研修/SQL研修資料/資料_自分用/iTunes/問題と解答_iTunes.md",
+    "SQL研修/SQL研修資料/資料_自分用/iTunes/総復習問題_iTunes/総復習2.md",
+    "SQL研修/SQL研修資料/資料_自分用/問題/15.プロシージャ.md",
+    "SQL研修/SQL研修資料/資料_自分用/問題/15.plpgsql.md",
+    "SQL研修/SQL研修資料/資料_自分用/問題/10.サブクエリ.md",
+    "SQL研修/SQL研修資料/資料_自分用/問題/08_結合.md",
+    "SQL研修/SQL研修資料/資料_自分用/問題/06.SELECT文について(特殊な演算子(LIKE、LIMIT句、条件分岐)).md",
+    "SQL研修/SQL研修資料/資料_自分用/問題/06.CASE式.md",
+    "SQL研修/SQL研修資料/資料_自分用/問題/02.INSERT文について.md",
+    "SQL研修/SQL研修資料/資料_自分用/問題/02.DELETE文について.md",
+    "SQL研修/SQL研修資料/資料_自分用/問題/02.UPDATE文について.md",
+    "SQL研修/SQL研修資料/資料_自分用/問題/03.関数.md",
+    "SQL研修/SQL研修資料/資料_自分用/問題/01.SQLとは、CREATE文.md",
+    "SQL研修/SQL研修資料/資料_自分用/問題/02.SELECT文(SELECT句、FROM句、WHERE句、ORDER BY句).md",
+    "SQL研修/SQL研修資料/sql研修_18日ver/配布用/07.結合/登録データ.md",
+    "SQL研修/SQL研修資料/sql研修_18日ver/配布用/07.結合/テーブル作成.md",
     "SQL研修/SQL研修資料/sql研修_18日ver/~$申請用カリキュラム202511_CTソリューションズ株式会社様_18日ver.xlsx",
-    "SQL研修/SQL研修資料/資料_自分用/講義資料/18_ウィンドウ関数.md",
-    "SQL研修/SQL研修資料/資料_自分用/講義資料/20_CTE（共通テーブル式）.md",
-    "SQL研修/SQL研修資料/資料_自分用/講義資料/PLpgSQL.md",
-    "SQL研修/SQL研修資料/資料_自分用/講義資料/補足_外部結合の条件.md",
-    "SQL研修/SQL研修資料/資料_自分用/講義資料/補足_型変換.md",
-    "SQL研修/SQL研修資料/資料_自分用/講義資料/補足_プロシージャのトランザクション.md",
-    "SQL研修/SQL研修資料/資料_自分用/講義資料/補足_PLpgSQL_例外処理.md",
-    "SQL研修/SQL研修資料/資料_自分用/講義資料/補足_PLpgSQL_動的SQL.md",
-    "SQL研修/SQL研修資料/資料_自分用/講義資料/acid特性.md",
-    "個別対応/村松さん/村松さん11月の予定.md",
-    "個別対応/村松さん/質問テンプレート.md",
-    "SQL研修/SQL研修改善案.md",
     "個別対応",
     "個別対応/村松さん",
     "SQL研修/SQL研修資料/資料_自分用/問題/課題_DB演習_サブクエリ_平松.xlsx",
