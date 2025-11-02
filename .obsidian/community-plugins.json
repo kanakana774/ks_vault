@@ -2,5 +2,7 @@
   "obsidian-tasks-plugin",
   "calendar",
   "highlightr-plugin",
-  "editing-toolbar"
+  "editing-toolbar",
+  "obsidian-linter",
+  "obsidian-regex-replace"
 ]
