@@ -1,5 +1,8 @@
 {
-  "theme": "obsidian",
+  "theme": "moonstone",
   "enabledCssSnippets": [],
-  "cssTheme": "Obsidianite"
+  "cssTheme": "AnuPpuccin",
+  "showViewHeader": true,
+  "showRibbon": true,
+  "baseFontSizeAction": false
 }

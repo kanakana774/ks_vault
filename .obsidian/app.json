@@ -1,5 +1,13 @@
 {
   "newFileLocation": "root",
   "showUnsupportedFiles": true,
-  "readableLineLength": false
+  "readableLineLength": false,
+  "showLineNumber": false,
+  "showIndentGuide": true,
+  "propertiesInDocument": "visible",
+  "foldHeading": true,
+  "rightToLeft": false,
+  "showInlineTitle": true,
+  "defaultViewMode": "preview",
+  "focusNewTab": true
 }

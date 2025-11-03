@@ -4,53 +4,20 @@
     "type": "split",
     "children": [
       {
-        "id": "ea71542ea23c581a",
+        "id": "237e90d73b9f452a",
         "type": "tabs",
         "children": [
           {
-            "id": "76dba046b28efa5d",
+            "id": "981af95d9a313387",
             "type": "leaf",
             "state": {
-              "type": "markdown",
-              "state": {
-                "file": "SQL研修/SQL研修資料/資料_自分用/講義資料/17_パフォーマンス改善.md",
-                "mode": "source",
-                "source": false
-              },
+              "type": "empty",
+              "state": {},
               "icon": "lucide-file",
-              "title": "17_パフォーマンス改善"
-            }
-          },
-          {
-            "id": "9ae36ad2f4e4565a",
-            "type": "leaf",
-            "state": {
-              "type": "markdown",
-              "state": {
-                "file": "SQL研修/SQL研修資料/資料_自分用/講義資料/15_PLpgSQL/02.基本構文とデータ型.md",
-                "mode": "source",
-                "source": false
-              },
-              "icon": "lucide-file",
-              "title": "02.基本構文とデータ型"
-            }
-          },
-          {
-            "id": "3dd4ce060deea83e",
-            "type": "leaf",
-            "state": {
-              "type": "markdown",
-              "state": {
-                "file": "SQL研修/SQL研修資料/資料_自分用/講義資料/17_indexと実行計画.md",
-                "mode": "source",
-                "source": false
-              },
-              "icon": "lucide-file",
-              "title": "17_indexと実行計画"
+              "title": "新規タブ"
             }
           }
-        ],
-        "currentTab": 2
+        ]
       }
     ],
     "direction": "vertical"
@@ -82,7 +49,7 @@
             "state": {
               "type": "search",
               "state": {
-                "query": "",
+                "query": "tag:#SQL/補足",
                 "matchingCase": false,
                 "explainSearch": false,
                 "collapseAll": false,
@@ -171,13 +138,12 @@
             "state": {
               "type": "outline",
               "state": {
-                "file": "SQL研修/SQL研修資料/資料_自分用/講義資料/17_indexと実行計画.md",
                 "followCursor": false,
                 "showSearch": false,
                 "searchQuery": ""
               },
               "icon": "lucide-list",
-              "title": "17_indexと実行計画のアウトライン"
+              "title": "アウトライン"
             }
           },
           {
@@ -208,45 +174,45 @@
       "bases:Create new base": false
     }
   },
-  "active": "3dd4ce060deea83e",
+  "active": "981af95d9a313387",
   "lastOpenFiles": [
+    "SQL研修/SQL研修資料/sql研修_18日ver/配布用/最終週_総復習/Chinook_PostgreSql_SerialPKs.sql",
+    "SQL研修/SQL研修資料/sql研修_18日ver/配布用/講義資料/補足：sequenceについて.md",
+    "SQL研修/SQL研修資料/資料_自分用/講義資料/00_補足：正規化の詳細.md",
+    "SQL研修/SQL研修資料/資料_自分用/講義資料/00_補足：RDBMSはなぜテーブルを分けるのか.md",
+    "SQL研修/SQL研修資料/資料_自分用/講義資料/15_PLpgSQL/PLpgSQL_学習項目一覧.md",
+    "SQL研修/SQL研修資料/資料_自分用/講義資料/01_データ型.md",
+    "SQL研修/SQL研修資料/資料_自分用/講義資料/01_RDBMSとDDL.md",
+    "SQL研修/SQL研修資料/資料_自分用/講義資料/02_CRUDについて.md",
+    "SQL研修/SQL研修資料/資料_自分用/講義資料/02_補足：テーブル構造.md",
+    "SQL研修/SQL研修資料/資料_自分用/講義資料/02_演算子.md",
+    "SQL研修/SQL研修資料/資料_自分用/講義資料/07_補足：groupByの論理実行順.md",
+    "SQL研修/SQL研修資料/資料_自分用/講義資料/08_補足：joinの論理実行順.md",
+    "SQL研修/SQL研修資料/資料_自分用/講義資料/08_補足：テーブル構造について考えてみる.md",
+    "SQL研修/SQL研修資料/資料_自分用/講義資料/補足：viewについて.md",
+    "SQL研修/SQL研修資料/資料_自分用/講義資料/補足：sequenceについて.md",
+    "無題のファイル.md",
+    "SQL研修/SQL研修資料/資料_自分用/講義資料/15_PLpgSQL/01.PLpgSQL入門.md",
+    "SQL研修/SQL研修資料/資料_自分用/講義資料/15_PLpgSQL/06.応用編：トリガーとカーソル.md",
+    "SQL研修/SQL研修資料/資料_自分用/講義資料/15_PLpgSQL/05.エラーハンドリングとデバッグ.md",
+    "SQL研修/SQL研修資料/資料_自分用/講義資料/15_PLpgSQL/04.関数とプロシージャの詳解.md",
+    "SQL研修/SQL研修資料/資料_自分用/講義資料/15_PLpgSQL/03.SQLの実行と制御フロー.md",
+    "SQL研修/SQL研修資料/資料_自分用/講義資料/15_PLpgSQL/02.基本構文とデータ型.md",
+    "SQL研修/SQL研修資料/資料_自分用/講義資料/20_CTE（共通テーブル式）.md",
+    "SQL研修/SQL研修資料/資料_自分用/講義資料/18_ウィンドウ関数.md",
+    "SQL研修/SQL研修資料/資料_自分用/講義資料/17_パフォーマンス改善（中級）.md",
+    "SQL研修/SQL研修資料/資料_自分用/講義資料/17_パフォーマンス改善.md",
+    "theme 1.css",
+    "theme.css",
+    "無題のファイル.canvas",
     "SQL研修/SQL研修資料/sql研修_18日ver/配布用.zip",
     "SQL研修/SQL研修資料/sql研修_18日ver.zip",
     "SQL研修/SQL研修資料/sql研修_18日ver/配布用/申請用カリキュラム202511_CTソリューションズ株式会社様_18日ver.xlsx",
     "SQL研修/SQL研修資料/sql研修_18日ver/配布用/日報_氏名.xlsx",
-    "SQL研修/SQL研修資料/sql研修_18日ver/配布用/講義資料/15_PLpgSQL/PLpgSQL_学習項目一覧.md",
-    "SQL研修/SQL研修資料/sql研修_18日ver/配布用/講義資料/15_PLpgSQL/05.エラーハンドリングとデバッグ.md",
-    "SQL研修/SQL研修資料/sql研修_18日ver/配布用/講義資料/15_PLpgSQL/06.応用編：トリガーとカーソル.md",
-    "SQL研修/SQL研修資料/sql研修_18日ver/配布用/講義資料/15_PLpgSQL/04.関数とプロシージャの詳解.md",
-    "SQL研修/SQL研修資料/sql研修_18日ver/配布用/講義資料/15_PLpgSQL/02.基本構文とデータ型.md",
-    "SQL研修/SQL研修資料/sql研修_18日ver/配布用/講義資料/15_PLpgSQL/03.SQLの実行と制御フロー.md",
-    "SQL研修/SQL研修資料/sql研修_18日ver/配布用/講義資料/15_PLpgSQL/01.PLpgSQL入門.md",
-    "SQL研修/SQL研修資料/sql研修_18日ver/配布用/講義資料/補足：viewについて.md",
-    "SQL研修/SQL研修資料/sql研修_18日ver/配布用/講義資料/20_CTE（共通テーブル式）.md",
-    "SQL研修/SQL研修資料/sql研修_18日ver/配布用/講義資料/18_ウィンドウ関数.md",
-    "SQL研修/SQL研修資料/sql研修_18日ver/配布用/講義資料/17_indexと実行計画.md",
-    "SQL研修/SQL研修資料/sql研修_18日ver/配布用/講義資料/17_パフォーマンス改善（中級）.md",
-    "SQL研修/SQL研修資料/sql研修_18日ver/配布用/講義資料/17_パフォーマンス改善.md",
     "SQL研修/SQL研修資料/sql研修_18日ver/配布用/講義資料/15_PLpgSQL",
-    "SQL研修/SQL研修資料/sql研修_18日ver/配布用/講義資料/14_トランザクションと排他制御.md",
-    "SQL研修/SQL研修資料/sql研修_18日ver/配布用/講義資料/10.相関サブクエリの読み方.md",
-    "SQL研修/SQL研修資料/sql研修_18日ver/配布用/講義資料/10.サブクエリ.md",
-    "SQL研修/SQL研修資料/sql研修_18日ver/配布用/講義資料/10.相関サブクエリの書き方（パターンで整理）.md",
-    "SQL研修/SQL研修資料/sql研修_18日ver/配布用/講義資料/09.集合演算子.md",
-    "SQL研修/SQL研修資料/sql研修_18日ver/配布用/講義資料/08_結合.md",
-    "SQL研修/SQL研修資料/sql研修_18日ver/配布用/講義資料/08_補足：テーブル構造について考えてみる.md",
-    "SQL研修/SQL研修資料/sql研修_18日ver/配布用/講義資料/07_集約関数.md",
-    "SQL研修/SQL研修資料/sql研修_18日ver/配布用/講義資料/08_補足：joinの論理実行順.md",
-    "SQL研修/SQL研修資料/sql研修_18日ver/配布用/講義資料/01_データ型.md",
-    "SQL研修/SQL研修資料/sql研修_18日ver/配布用/講義資料/07_補足：groupByの論理実行順.md",
-    "SQL研修/SQL研修資料/sql研修_18日ver/配布用/講義資料/06_CASE式.md",
     "SQL研修/SQL研修資料/sql研修_18日ver/配布用/講義資料",
     "SQL研修/SQL研修資料/sql研修_18日ver/講義資料/15_PLpgSQL",
     "SQL研修/SQL研修資料/sql研修_18日ver/講義資料",
-    "無題のファイル.canvas",
-    "無題のファイル.base",
-    "tasks",
-    "SQL研修/SQL研修資料/資料_自分用/講義資料/15_PLpgSQL",
     "タスク.canvas"
   ]
 }

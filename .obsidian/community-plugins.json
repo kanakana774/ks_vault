@@ -1,8 +1,8 @@
 [
   "obsidian-tasks-plugin",
   "calendar",
-  "highlightr-plugin",
   "editing-toolbar",
   "obsidian-linter",
-  "obsidian-regex-replace"
+  "obsidian-regex-replace",
+  "obsidian-style-settings"
 ]
