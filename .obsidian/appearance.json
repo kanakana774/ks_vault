@@ -3,6 +3,6 @@
   "enabledCssSnippets": [],
   "cssTheme": "AnuPpuccin",
   "showViewHeader": true,
-  "showRibbon": true,
+  "showRibbon": false,
   "baseFontSizeAction": false
 }

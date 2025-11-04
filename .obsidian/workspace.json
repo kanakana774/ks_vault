@@ -4,17 +4,21 @@
     "type": "split",
     "children": [
       {
-        "id": "237e90d73b9f452a",
+        "id": "0aeb70fe3df3b74b",
         "type": "tabs",
         "children": [
           {
-            "id": "981af95d9a313387",
+            "id": "8532f1a35095dda2",
             "type": "leaf",
             "state": {
-              "type": "empty",
-              "state": {},
+              "type": "markdown",
+              "state": {
+                "file": "SQL研修/SQL研修資料/資料_自分用/講義資料/00_補足：RDBMSはなぜテーブルを分けるのか.md",
+                "mode": "preview",
+                "source": false
+              },
               "icon": "lucide-file",
-              "title": "新規タブ"
+              "title": "00_補足：RDBMSはなぜテーブルを分けるのか"
             }
           }
         ]
@@ -74,7 +78,7 @@
       }
     ],
     "direction": "horizontal",
-    "width": 378.51103591918945
+    "width": 275
   },
   "right": {
     "id": "ac97bbc9724b9004",
@@ -138,12 +142,13 @@
             "state": {
               "type": "outline",
               "state": {
+                "file": "SQL研修/SQL研修資料/資料_自分用/講義資料/00_補足：RDBMSはなぜテーブルを分けるのか.md",
                 "followCursor": false,
                 "showSearch": false,
                 "searchQuery": ""
               },
               "icon": "lucide-list",
-              "title": "アウトライン"
+              "title": "00_補足：RDBMSはなぜテーブルを分けるのかのアウトライン"
             }
           },
           {
@@ -161,7 +166,7 @@
       }
     ],
     "direction": "horizontal",
-    "width": 333.5
+    "width": 238
   },
   "left-ribbon": {
     "hiddenItems": {
@@ -174,8 +179,33 @@
       "bases:Create new base": false
     }
   },
-  "active": "981af95d9a313387",
+  "active": "8532f1a35095dda2",
   "lastOpenFiles": [
+    "SQL研修/pgAdmin操作方法/pgAdmin操作方法.svg",
+    "SQL研修/pgAdmin操作方法/pgAdmin操作方法.drawio",
+    "SQL研修/pgAdmin操作方法",
+    "用語集.md",
+    "SQL研修/用語集.md",
+    "SQL研修/pgAdmin操作方法/pgAdmin操作方法.png",
+    "pgAdmin操作方法/pgAdmin操作方法.svg",
+    "pgAdmin操作方法/pgAdmin操作方法.drawio",
+    "pgAdmin操作方法",
+    "pgAdmin操作方法.svg",
+    "SQL研修/pgAdmin操作方法.drawio",
+    "pgAdminの操作方法/pgAdmin操作方法.canvas",
+    "pgAdminの操作方法/pgAdminの操作方法.canvas",
+    "pgAdminの操作方法/Pasted image 20251104170450.png",
+    "pgAdminの操作方法/Pasted image 20251104170354.png",
+    "pgAdminの操作方法/Pasted image 20251104170249.png",
+    "pgAdminの操作方法/Pasted image 20251104165018.png",
+    "pgAdminの操作方法/Pasted image 20251104164931.png",
+    "pgAdminの操作方法/Pasted image 20251104164905.png",
+    "pgAdminの操作方法/Pasted image 20251104164751.png",
+    "pgAdminの操作方法.canvas",
+    "pgAdminの操作方法",
+    "SQL研修/SQL研修資料/資料_自分用/iTunes/総復習問題_iTunes/総復習1.md",
+    "無題のファイル.md",
+    "無題のファイル 1.md",
     "SQL研修/SQL研修資料/sql研修_18日ver/配布用/最終週_総復習/Chinook_PostgreSql_SerialPKs.sql",
     "SQL研修/SQL研修資料/sql研修_18日ver/配布用/講義資料/補足：sequenceについて.md",
     "SQL研修/SQL研修資料/資料_自分用/講義資料/00_補足：正規化の詳細.md",
@@ -191,28 +221,15 @@
     "SQL研修/SQL研修資料/資料_自分用/講義資料/08_補足：テーブル構造について考えてみる.md",
     "SQL研修/SQL研修資料/資料_自分用/講義資料/補足：viewについて.md",
     "SQL研修/SQL研修資料/資料_自分用/講義資料/補足：sequenceについて.md",
-    "無題のファイル.md",
     "SQL研修/SQL研修資料/資料_自分用/講義資料/15_PLpgSQL/01.PLpgSQL入門.md",
     "SQL研修/SQL研修資料/資料_自分用/講義資料/15_PLpgSQL/06.応用編：トリガーとカーソル.md",
     "SQL研修/SQL研修資料/資料_自分用/講義資料/15_PLpgSQL/05.エラーハンドリングとデバッグ.md",
     "SQL研修/SQL研修資料/資料_自分用/講義資料/15_PLpgSQL/04.関数とプロシージャの詳解.md",
     "SQL研修/SQL研修資料/資料_自分用/講義資料/15_PLpgSQL/03.SQLの実行と制御フロー.md",
     "SQL研修/SQL研修資料/資料_自分用/講義資料/15_PLpgSQL/02.基本構文とデータ型.md",
-    "SQL研修/SQL研修資料/資料_自分用/講義資料/20_CTE（共通テーブル式）.md",
-    "SQL研修/SQL研修資料/資料_自分用/講義資料/18_ウィンドウ関数.md",
-    "SQL研修/SQL研修資料/資料_自分用/講義資料/17_パフォーマンス改善（中級）.md",
-    "SQL研修/SQL研修資料/資料_自分用/講義資料/17_パフォーマンス改善.md",
     "theme 1.css",
     "theme.css",
-    "無題のファイル.canvas",
     "SQL研修/SQL研修資料/sql研修_18日ver/配布用.zip",
-    "SQL研修/SQL研修資料/sql研修_18日ver.zip",
-    "SQL研修/SQL研修資料/sql研修_18日ver/配布用/申請用カリキュラム202511_CTソリューションズ株式会社様_18日ver.xlsx",
-    "SQL研修/SQL研修資料/sql研修_18日ver/配布用/日報_氏名.xlsx",
-    "SQL研修/SQL研修資料/sql研修_18日ver/配布用/講義資料/15_PLpgSQL",
-    "SQL研修/SQL研修資料/sql研修_18日ver/配布用/講義資料",
-    "SQL研修/SQL研修資料/sql研修_18日ver/講義資料/15_PLpgSQL",
-    "SQL研修/SQL研修資料/sql研修_18日ver/講義資料",
     "タスク.canvas"
   ]
 }
