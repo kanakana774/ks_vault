@@ -1,0 +1,10 @@
+# Obsidian and workspace specific files
+.obsidian/workspace.json
+.obsidian/workspaces.json
+.obsidian/app.json
+.obsidian/graph.json
+.obsidian/community-plugins.json
+
+# Cache files
+.obsidian/cache
+.obsidian/trash/
