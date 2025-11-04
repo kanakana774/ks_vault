@@ -9,5 +9,6 @@
   "rightToLeft": false,
   "showInlineTitle": true,
   "defaultViewMode": "preview",
-  "focusNewTab": true
+  "focusNewTab": true,
+  "alwaysUpdateLinks": true
 }

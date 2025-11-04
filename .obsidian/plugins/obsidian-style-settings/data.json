@@ -72,5 +72,18 @@
   "anuppuccin-theme-settings@@anp-table-toggle": false,
   "anuppuccin-theme-settings@@anp-table-width": false,
   "anuppuccin-theme-settings@@anp-table-auto": false,
-  "anuppuccin-theme-settings@@anp-highlight-custom": "anp-highlight-teal"
+  "anuppuccin-theme-settings@@anp-highlight-custom": "anp-highlight-teal",
+  "obsidian-prism-theme@@color-schemes-lt": "pt-color-scheme-periwinkle-lt",
+  "obsidian-prism-theme@@color-scheme-style-lt": "pt-color-scheme-style-two-tone-and-border-lt",
+  "obsidian-prism-theme@@accent-style-lt": "pt-accent-style-borderandfilled-lt",
+  "obsidian-prism-theme@@light-accent-color-preset": "pt-accent-color-purple-lt",
+  "obsidian-prism-theme@@highlight-text-accent-lt": "pt-highlight-text-accent-lt",
+  "obsidian-prism-theme@@pt-custom-vault-banner": true,
+  "obsidian-prism-theme@@pt-focused-mode": false,
+  "obsidian-prism-theme@@focused-mode-style": "pt-focused-style-main-only",
+  "obsidian-prism-theme@@pt-fade-inactive-tabs": false,
+  "obsidian-prism-theme@@pt-font-alt-a": false,
+  "obsidian-prism-theme@@pt-font-alt-g": false,
+  "obsidian-prism-theme@@pt-font-slashed-zero": true,
+  "obsidian-prism-theme@@pt-font-disable-ligatures": true
 }
