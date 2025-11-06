@@ -70,9 +70,8 @@ VALUES ('Mouse', 25.50);
 ### 基本構文
 
 ```sql
-SELECT 列名1, 列名2, ...
-FROM テーブル名
-[AS テーブルのエイリアス]
+SELECT 列名1 [AS 列のエイリアス], 列名2 [AS 列のエイリアス], ...
+FROM テーブル名 [AS テーブルのエイリアス]
 [WHERE 条件式]
 [ORDER BY 列名 [ASC|DESC]]
 [LIMIT 件数 [OFFSET 開始位置]];
