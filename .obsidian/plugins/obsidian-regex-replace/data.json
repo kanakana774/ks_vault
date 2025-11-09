@@ -1,6 +1,6 @@
 {
-  "findText": "(実務での.*)",
-  "replaceText": "",
+  "findText": "^#",
+  "replaceText": "##",
   "useRegEx": true,
   "selOnly": false,
   "caseInsensitive": false,

@@ -99,7 +99,7 @@
   "sanctum@@code-label": true,
   "sanctum@@code-border": false,
   "sanctum@@active-line-accent": "var(--background-hover)",
-  "sanctum@@h2-line": true,
+  "sanctum@@h2-line": false,
   "sanctum@@table-cell-border": true,
   "sanctum@@table-row-border": false,
   "sanctum@@table-column-border": false,
@@ -113,5 +113,9 @@
   "sanctum@@h2-style": "normal",
   "sanctum@@aside-counter": false,
   "sanctum@@indentation-guide-active": "rgba(var(--mono-rgb-100), 0.3)",
-  "sanctum@@aside-border": false
+  "sanctum@@aside-border": false,
+  "sanctum@@h4-line": true,
+  "sanctum@@h3-line": true,
+  "sanctum@@blockquote-marker": false,
+  "sanctum@@blockquote-border": false
 }
