@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.batch.mapper.PurchaseHistoryMapper">
+
+    <select id="findPurchaseHistoryUntilDatePaged" resultType="com.example.batch.domain.PurchaseHistory">
+        SELECT
+            id as id,
+            customer_id as customerId,
+            purchase_date as purchaseDate,
+            item_name as itemName,
+            amount as amount,
+            created_at as createdAt
+        FROM
+            purchase_history
+        WHERE
+            purchase_date &lt;= #{processingDate}
+        ORDER BY
+            id ASC, purchase_date ASC
+        OFFSET #{offset}
+        LIMIT #{limit}
+    </select>
+
+</mapper>

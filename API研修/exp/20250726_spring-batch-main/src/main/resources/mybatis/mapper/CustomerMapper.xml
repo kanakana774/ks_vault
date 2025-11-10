@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.batch.mapper.CustomerMapper">
+    <update id="upsertUserMonthlyPoints">
+    <foreach collection="list" item="item" separator=";">
+        INSERT INTO user_monthly_points (customer_id, year_month, total_points)
+        VALUES (#{item.customerId}, #{item.month}, #{item.totalPoints})
+        ON CONFLICT (customer_id, year_month)
+        DO UPDATE SET total_points = #{item.totalPoints}
+    </foreach>
+    </update>
+</mapper>
