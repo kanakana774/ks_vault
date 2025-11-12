@@ -23,5 +23,14 @@
       ],
       "key": "H"
     }
+  ],
+  "insert-current-date": [
+    {
+      "modifiers": [
+        "Alt",
+        "Mod"
+      ],
+      "key": "="
+    }
   ]
 }
