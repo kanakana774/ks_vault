@@ -1,17 +1,22 @@
 {
 	"nodes":[
-		{"id":"81873701b33f8b64","x":-800,"y":80,"width":400,"height":400,"type":"file","file":"01.SQL研修/SQL研修資料/資料_自分用/講義資料/00_補足：RDBMSはなぜテーブルを分けるのか.md"},
-		{"id":"2c897337ba756354","type":"file","file":"01.SQL研修/SQL研修資料/資料_自分用/講義資料/08_結合.md","x":-360,"y":140,"width":400,"height":400},
-		{"id":"bc84c4d8374fa336","x":100,"y":80,"width":400,"height":400,"type":"file","file":"01.SQL研修/SQL研修資料/資料_自分用/講義資料/08_補足：joinのイメージ.md"},
-		{"id":"83e07b97fd6d8083","x":560,"y":-160,"width":400,"height":400,"type":"file","file":"01.SQL研修/SQL研修資料/資料_自分用/講義資料/08_補足：テーブル構造について考えてみる.md"},
-		{"id":"c213827dffc5ff89","x":600,"y":480,"width":1500,"height":958,"type":"file","file":"01.SQL研修/SQL研修資料/資料_自分用/講義資料/説明用の図とか/sql_lesson2_ERD.png"},
-		{"id":"3de465250c1213ec","type":"text","text":"- 結合\n\t- 正規化との関連\n\t- 講義資料\n\t- 手続き的な読み方\n\t- テーブル構造について制約からシステムを読む","x":-432,"y":-200,"width":545,"height":150}
+		{"id":"db29c2c80117dfc8","x":400,"y":-164,"width":2020,"height":1928,"type":"group","label":"09_集合演算子"},
+		{"id":"ac92af53e2cb3574","x":-1120,"y":-120,"width":1340,"height":920,"type":"group","label":"08_結合"},
+		{"id":"81873701b33f8b64","type":"file","file":"01.SQL研修/SQL研修資料/資料_自分用/講義資料/00_補足：RDBMSはなぜテーブルを分けるのか.md","x":-1100,"y":320,"width":400,"height":400},
+		{"id":"2c897337ba756354","type":"file","file":"01.SQL研修/SQL研修資料/資料_自分用/講義資料/08_結合.md","x":-660,"y":380,"width":400,"height":400},
+		{"id":"bc84c4d8374fa336","type":"file","file":"01.SQL研修/SQL研修資料/資料_自分用/講義資料/08_補足：joinのイメージ.md","x":-200,"y":320,"width":400,"height":400},
+		{"id":"3de465250c1213ec","type":"text","text":"- 08_結合\n\t- 正規化との関連\n\t- 講義資料\n\t- 手続き的な読み方\n\t- 宣言的な書き方\n\t\t- selectで欲しい列を並べる\n\t\t- ER図とかでその列を持つテーブルの位置関係を見る\n\t\t- どの順路で結合すればいいか考えてjoinしていく","x":-732,"y":-100,"width":545,"height":290},
+		{"id":"c213827dffc5ff89","type":"file","file":"01.SQL研修/SQL研修資料/資料_自分用/講義資料/説明用の図とか/sql_lesson2_ERD.png","x":420,"y":786,"width":1500,"height":958},
+		{"id":"83e07b97fd6d8083","type":"file","file":"01.SQL研修/SQL研修資料/資料_自分用/講義資料/08_補足：テーブル構造について考えてみる.md","x":1040,"y":246,"width":400,"height":400},
+		{"id":"144890a3c073df47","type":"text","text":"- 09_集合演算子\n\t-  テーブル構造について制約からシステムを読む（テーブルが新しくなったので）\n\t- 講義資料","x":1360,"y":-144,"width":700,"height":230},
+		{"id":"9189e38e368295a8","x":2000,"y":246,"width":400,"height":400,"type":"file","file":"01.SQL研修/SQL研修資料/資料_自分用/講義資料/09_集合演算子.md"}
 	],
 	"edges":[
 		{"id":"ac56ec1434ad3012","fromNode":"3de465250c1213ec","fromSide":"bottom","toNode":"81873701b33f8b64","toSide":"top"},
 		{"id":"74aa255ad2e687f5","fromNode":"3de465250c1213ec","fromSide":"bottom","toNode":"bc84c4d8374fa336","toSide":"top"},
 		{"id":"073742124908f9bd","fromNode":"3de465250c1213ec","fromSide":"bottom","toNode":"2c897337ba756354","toSide":"top"},
-		{"id":"2846234c0a9a03ff","fromNode":"3de465250c1213ec","fromSide":"right","toNode":"83e07b97fd6d8083","toSide":"left"},
-		{"id":"af2354aaa3fbde2e","fromNode":"83e07b97fd6d8083","fromSide":"bottom","toNode":"c213827dffc5ff89","toSide":"top"}
+		{"id":"af2354aaa3fbde2e","fromNode":"83e07b97fd6d8083","fromSide":"bottom","toNode":"c213827dffc5ff89","toSide":"top"},
+		{"id":"5d224e894d8942b7","fromNode":"144890a3c073df47","fromSide":"bottom","toNode":"9189e38e368295a8","toSide":"top"},
+		{"id":"6e3c7be0d5a35102","fromNode":"144890a3c073df47","fromSide":"bottom","toNode":"83e07b97fd6d8083","toSide":"top"}
 	]
 }
