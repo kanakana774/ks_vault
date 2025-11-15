@@ -1,15 +1,15 @@
 {
 	"nodes":[
-		{"id":"db29c2c80117dfc8","x":400,"y":-164,"width":2020,"height":1928,"type":"group","label":"09_集合演算子"},
-		{"id":"ac92af53e2cb3574","x":-1120,"y":-120,"width":1340,"height":920,"type":"group","label":"08_結合"},
+		{"id":"db29c2c80117dfc8","type":"group","x":400,"y":-164,"width":2020,"height":1928,"label":"09_集合演算子"},
+		{"id":"ac92af53e2cb3574","type":"group","x":-1120,"y":-120,"width":1340,"height":920,"label":"08_結合"},
 		{"id":"81873701b33f8b64","type":"file","file":"01.SQL研修/SQL研修資料/資料_自分用/講義資料/00_補足：RDBMSはなぜテーブルを分けるのか.md","x":-1100,"y":320,"width":400,"height":400},
+		{"id":"144890a3c073df47","type":"text","text":"- 09_集合演算子\n\t-  テーブル構造について制約からシステムを読む（テーブルが新しくなったので）\n\t- 講義資料","x":1360,"y":-144,"width":700,"height":230},
+		{"id":"9189e38e368295a8","type":"file","file":"01.SQL研修/SQL研修資料/資料_自分用/講義資料/09_集合演算子.md","x":2000,"y":246,"width":400,"height":400},
+		{"id":"83e07b97fd6d8083","type":"file","file":"01.SQL研修/SQL研修資料/資料_自分用/講義資料/08_補足：テーブル構造について考えてみる.md","x":1040,"y":246,"width":400,"height":400},
 		{"id":"2c897337ba756354","type":"file","file":"01.SQL研修/SQL研修資料/資料_自分用/講義資料/08_結合.md","x":-660,"y":380,"width":400,"height":400},
 		{"id":"bc84c4d8374fa336","type":"file","file":"01.SQL研修/SQL研修資料/資料_自分用/講義資料/08_補足：joinのイメージ.md","x":-200,"y":320,"width":400,"height":400},
 		{"id":"3de465250c1213ec","type":"text","text":"- 08_結合\n\t- 正規化との関連\n\t- 講義資料\n\t- 手続き的な読み方\n\t- 宣言的な書き方\n\t\t- selectで欲しい列を並べる\n\t\t- ER図とかでその列を持つテーブルの位置関係を見る\n\t\t- どの順路で結合すればいいか考えてjoinしていく","x":-732,"y":-100,"width":545,"height":290},
-		{"id":"c213827dffc5ff89","type":"file","file":"01.SQL研修/SQL研修資料/資料_自分用/講義資料/説明用の図とか/sql_lesson2_ERD.png","x":420,"y":786,"width":1500,"height":958},
-		{"id":"83e07b97fd6d8083","type":"file","file":"01.SQL研修/SQL研修資料/資料_自分用/講義資料/08_補足：テーブル構造について考えてみる.md","x":1040,"y":246,"width":400,"height":400},
-		{"id":"144890a3c073df47","type":"text","text":"- 09_集合演算子\n\t-  テーブル構造について制約からシステムを読む（テーブルが新しくなったので）\n\t- 講義資料","x":1360,"y":-144,"width":700,"height":230},
-		{"id":"9189e38e368295a8","x":2000,"y":246,"width":400,"height":400,"type":"file","file":"01.SQL研修/SQL研修資料/資料_自分用/講義資料/09_集合演算子.md"}
+		{"id":"c213827dffc5ff89","type":"file","file":"01.SQL研修/SQL研修資料/資料_自分用/講義資料/説明用の図とか/sql_lesson2_ERD.png","x":420,"y":786,"width":1500,"height":958}
 	],
 	"edges":[
 		{"id":"ac56ec1434ad3012","fromNode":"3de465250c1213ec","fromSide":"bottom","toNode":"81873701b33f8b64","toSide":"top"},

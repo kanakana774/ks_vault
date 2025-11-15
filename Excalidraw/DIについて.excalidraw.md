@@ -11,9 +11,9 @@ tags: [excalidraw]
 
 ## Text Elements
 ## Element Links
-MvAKsaiS: [[Excalidraw/API作図.excalidraw.md#DI_ClassB]]
+MvAKsaiS: [[API資料.excalidraw#DI_ClassB]]
 
-AoB6aefH: [[Excalidraw/API作図.excalidraw.md#DI_ClassA]]
+AoB6aefH: [[API資料.excalidraw#DI_ClassA]]
 
 %%
 ## Drawing

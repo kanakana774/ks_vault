@@ -1,0 +1,22 @@
+{
+	"nodes":[
+		{"id":"7e350b22b5eb2041","type":"file","file":"02.API研修/exp/20250911_lectureDocument-main/20250911_lectureDocument-main/00.アジェンダ的な.md","x":-920,"y":-1200,"width":840,"height":2160},
+		{"id":"d544d341a976faf3","type":"file","file":"02.API研修/exp/20250911_lectureDocument-main/20250911_lectureDocument-main/01.APIとは.md","x":200,"y":-1440,"width":600,"height":400},
+		{"id":"3de7f68eabd8b572","type":"file","file":"02.API研修/exp/20250911_lectureDocument-main/20250911_lectureDocument-main/03.変更に強いシステムとするために.md","x":200,"y":960,"width":740,"height":400},
+		{"id":"f52d2e1dfe4d4d7c","type":"file","file":"Excalidraw/DIについて.excalidraw.md","x":1187,"y":960,"width":400,"height":400},
+		{"id":"6f7ea2f202910097","type":"file","file":"02.API研修/exp/20250911_lectureDocument-main/20250911_lectureDocument-main/01.webAPIの利用例（webアプリケーション）.md","x":1003,"y":-1520,"width":1157,"height":560},
+		{"id":"795dbe528b8bd275","type":"file","file":"02.API研修/exp/20250911_lectureDocument-main/20250911_lectureDocument-main/02.httpプロトコルとrestAPIについて.md","x":418,"y":-760,"width":1078,"height":400},
+		{"id":"8fc5e2a51f757d00","type":"text","text":"##### フレームワーク（spring-boot）の役割\n- httpリクエストの受付と各処理の呼び分け\n- インスタンスのライフサイクルを管理\n\n⇒**フレームワークとはテンプレ/枠組みのことです。開発に必要な便利な機能を提供します。**\n\n##### O/Rマッパー（MyBatis）\n- javaとデータベースの橋渡し役\n\t- SQLでDBにデータを要求したり、データを作成/更新/削除する\n\t- 取得したデータをjavaのオブジェクトに格納する\n\n⇒**O/Rマッパーは、javaのObjectとテーブル（Relation）をマッピングする機能を提供します。**","x":1582,"y":180,"width":740,"height":400},
+		{"id":"7ac0504a4249a138","type":"file","file":"02.API研修/exp/20250911_lectureDocument-main/20250911_lectureDocument-main/API資料.excalidraw.md","x":447,"y":-40,"width":987,"height":840},
+		{"id":"f9d47a5532cb5adf","x":-440,"y":1680,"width":1040,"height":440,"type":"file","file":"02.API研修/exp/20250911_lectureDocument-main/20250911_lectureDocument-main/排他制御.md"}
+	],
+	"edges":[
+		{"id":"42a24a690acdb599","fromNode":"7e350b22b5eb2041","fromSide":"right","toNode":"7ac0504a4249a138","toSide":"left"},
+		{"id":"f1cae86802de414e","fromNode":"7ac0504a4249a138","fromSide":"right","toNode":"8fc5e2a51f757d00","toSide":"left"},
+		{"id":"85cdca6afc8e9dff","fromNode":"7e350b22b5eb2041","fromSide":"right","toNode":"3de7f68eabd8b572","toSide":"left"},
+		{"id":"88e07e30cd5ff7af","fromNode":"3de7f68eabd8b572","fromSide":"right","toNode":"f52d2e1dfe4d4d7c","toSide":"left"},
+		{"id":"6618fc5d09499ba0","fromNode":"7e350b22b5eb2041","fromSide":"right","toNode":"795dbe528b8bd275","toSide":"left"},
+		{"id":"87dd48a770913a93","fromNode":"7e350b22b5eb2041","fromSide":"right","toNode":"d544d341a976faf3","toSide":"left"},
+		{"id":"d23e336708ac7832","fromNode":"d544d341a976faf3","fromSide":"right","toNode":"6f7ea2f202910097","toSide":"left"}
+	]
+}
