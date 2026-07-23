@@ -703,9 +703,9 @@ I5GPQjQv: [[JVMのメモリ空間のイメージ.excalidraw#呼び出される�
 
 C1Jam7X9: [[JVMのメモリ空間のイメージ.excalidraw#DTO]]
 
-r03cIUYv: [[02.API研修_2か月目/Lecture/99.lectureDocumentAPI/画像置き場/JVMのメモリ空間のイメージ.excalidraw.md#DIありの例]]
+r03cIUYv: [[02_API研修_2か月目/01_講義資料/API/画像置き場/JVMのメモリ空間のイメージ.excalidraw.md#DIありの例]]
 
-yZb4Sn68: [[02.API研修_2か月目/Lecture/99.lectureDocumentAPI/画像置き場/JVMのメモリ空間のイメージ.excalidraw.md#DIなしの例]]
+yZb4Sn68: [[02_API研修_2か月目/01_講義資料/API/画像置き場/JVMのメモリ空間のイメージ.excalidraw.md#DIなしの例]]
 
 %%
 ## Drawing
