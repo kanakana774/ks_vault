@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Java Memory - Primitive Pass-by-Value</title>
+    <style>
+        :root {
+            --bg-body: #f1f5f9;
+            --bg-card: #ffffff;
+            --stack-color: #3b82f6; /* 基本型は青色 */
+            --heap-color: #10b981;
+            --accent: #f59e0b;
+            --text-main: #1e293b;
+            --text-sub: #64748b;
+            --border: #e2e8f0;
+            --stack-bg: #f8fafc;
+            --heap-bg: #f0fdf4;
+            --console-bg: #1e293b;
+        }
+
+        body { font-family: 'Segoe UI', system-ui, sans-serif; background-color: var(--bg-body); color: var(--text-main); margin: 0; padding: 10px; display: flex; flex-direction: column; align-items: center; }
+
+        .container { display: flex; gap: 15px; width: 100%; max-width: 1100px; height: 60vh; min-height: 500px; }
+
+        /* 左側：コードパネル */
+        .code-panel { flex: 0.9; background: #282c34; color: #d1d5db; padding: 20px; border-radius: 12px; font-family: 'Cascadia Code', 'Consolas', monospace; font-size: 0.85rem; line-height: 1.4; overflow-y: auto; }
+        .line { padding: 1px 8px; border-radius: 4px; transition: 0.2s; opacity: 0.7; border-left: 4px solid transparent; white-space: pre; }
+        .line.active { opacity: 1; background: #3e4451; border-left-color: var(--stack-color); color: #fff; }
+
+        /* 右側：メモリパネル */
+        .memory-panel { flex: 1.4; background: var(--bg-card); border-radius: 12px; border: 1px solid var(--border); position: relative; display: flex; flex-direction: column; padding: 15px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+        .memory-header { font-weight: bold; font-size: 0.7rem; color: var(--text-sub); text-transform: uppercase; margin-bottom: 5px; }
+
+        .stack-area { flex: 1.5; background: #f8fafc; border-radius: 10px; border: 2px solid var(--border); margin-bottom: 15px; display: flex; flex-direction: column-reverse; padding: 10px; gap: 8px; position: relative; z-index: 5; }
+        .stack-frame { border: 1px solid #cbd5e1; background: rgba(255,255,255,0.8); border-radius: 6px; padding: 10px; position: relative; }
+        .frame-label { position: absolute; top: -7px; right: 8px; font-size: 0.6rem; background: #94a3b8; color: white; padding: 1px 4px; border-radius: 3px; }
+
+        .stack-var { width: 130px; padding: 4px 8px; border-radius: 5px; background: #fff; border: 1px solid var(--border); display: flex; justify-content: space-between; font-size: 0.75rem; margin-top: 4px; }
+        .var-primitive { border-left: 3px solid var(--stack-color); }
+
+        .heap-area { flex: 0.5; background: #f1f5f9; border-radius: 10px; border: 2px dashed #cbd5e1; position: relative; display: flex; align-items: center; justify-content: center; }
+        .heap-empty-msg { font-size: 0.7rem; color: #94a3b8; text-align: center; }
+
+        .console-container { width: 100%; max-width: 1100px; margin-top: 15px; background: var(--console-bg); border-radius: 8px; padding: 10px; color: #fff; font-family: 'Consolas', monospace; font-size: 0.85rem; }
+        .console-line { color: #3b82f6; min-height: 1.2em; }
+
+        .footer { margin-top: 15px; display: flex; flex-direction: column; align-items: center; gap: 10px; }
+        .commentary { font-size: 1rem; font-weight: 500; background: #fff; padding: 8px 25px; border-radius: 30px; border: 1px solid var(--border); text-align: center; max-width: 850px; min-height: 1.5em;}
+        button { padding: 10px 24px; border-radius: 8px; border: none; background: var(--text-main); color: #fff; font-weight: 600; cursor: pointer; }
+
+        .update-flash { animation: flash 0.8s; }
+        @keyframes flash { 0% { background-color: var(--stack-color); color: white; } 100% { background-color: white; color: inherit; } }
+        .frame-exit { opacity: 0; filter: blur(5px); transform: scale(0.95); transition: 0.4s; }
+    </style>
+</head>
+<body>
+
+    <h2 style="margin: 0 0 10px 0;">Java Memory: Primitive Pass-by-Value</h2>
+
+    <div class="container">
+        <div class="code-panel">
+<div class="line" id="l1">public class Main {</div>
+<div class="line" id="l2">  public static void main(String[] args) {</div>
+<div class="line" id="l3">    int n = 10;</div>
+<div class="line" id="l4">    update(n);</div>
+<div class="line" id="l5">    System.out.println(n);</div>
+<div class="line" id="l6">  }</div>
+<div style="margin: 5px 0; height: 1px; background: #444; opacity: 0.3;"></div>
+<div class="line" id="l7">  static void update(int x) {</div>
+<div class="line" id="l8">    x = 99;</div>
+<div class="line" id="l9">  }</div>
+<div class="line" id="l10">}</div>
+        </div>
+
+        <div class="memory-panel">
+            <div class="memory-header">Stack (Separate Values)</div>
+            <div class="stack-area" id="stack-area"></div>
+            
+            <div class="memory-header">Heap (No Objects Used)</div>
+            <div class="heap-area">
+                <div class="heap-empty-msg">基本型のみの場合、<br>ヒープは使用されません</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="console-container"><div id="console-out">> waiting...</div></div>
+    <div class="commentary" id="commentary">「次へ」で開始</div>
+    
+    <div class="btn-group" style="margin-top: 10px;">
+        <button id="nextBtn" onclick="nextStep()">次へ進む</button>
+        <button onclick="location.reload()" style="background:#fff; color:#333; border:1px solid #ccc; padding: 8px 20px; border-radius: 8px; cursor: pointer;">リセット</button>
+    </div>
+
+<script>
+    let step = -1;
+
+    const flow = [
+        { line: 'l2', msg: "プログラム開始。mainのスタックフレームが生成されます。", action: () => { createFrame('main'); } },
+        
+        { line: 'l3', msg: "【定義】main内に int型の変数 n の箱を用意します。", action: () => { pushVar('main', 'n', '?', 'var-primitive'); } },
+        { line: 'l3', msg: "【代入】変数 n に値 10 が直接格納されます。", action: () => { updateVar('main', 'n', '10'); } },
+        
+        { line: 'l4', msg: "update(n) を呼び出し。値 10 を引数として渡します。", action: () => { } },
+
+        { line: 'l7', msg: "【定義】updateフレームが作られ、引数 x の箱が用意されます。", action: () => { createFrame('update'); pushVar('update', 'x', '?', 'var-primitive'); } },
+        { line: 'l7', msg: "【代入】呼び出し元の n から値(10)が x に複製されます。住所ではなく「数値」そのものです。", action: () => { updateVar('update', 'x', '10'); } },
+
+        { line: 'l8', msg: "【更新】x = 99 : updateフレームの中にある x だけが書き換わります。", action: () => { updateVar('update', 'x', '99'); } },
+
+        { line: 'l9', msg: "メソッド終了。updateフレームと、その中の x はすべて消滅します。", action: () => { removeFrame('update'); } },
+
+        { line: 'l5', msg: "println：mainにある n の箱はずっと 10 のまま。呼び出し元の値は不変です。", action: () => { document.getElementById('console-out').innerText = "> 10"; } }
+    ];
+
+    function highlightLine(id) { document.querySelectorAll('.line').forEach(l => l.classList.remove('active')); const t = document.getElementById(id); if (t) t.classList.add('active'); }
+    function createFrame(n) { const d = document.createElement('div'); d.id=`frame-${n}`; d.className='stack-frame'; d.innerHTML=`<div class="frame-label">${n}()</div><div id="vars-${n}"></div>`; document.getElementById('stack-area').appendChild(d); }
+    function pushVar(f, v, val, c) { const con = document.getElementById(`vars-${f}`); const d = document.createElement('div'); d.id=`var-${f}-${v}`; d.className=`stack-var ${c}`; d.innerHTML=`<span>${v}</span><strong>${val}</strong>`; con.appendChild(d); }
+    function updateVar(f, v, n) { const e = document.getElementById(`var-${f}-${v}`); if(e) { e.querySelector('strong').innerText=n; e.classList.add('update-flash'); setTimeout(()=>e.classList.remove('update-flash'), 800); } }
+    function removeFrame(n) { const f = document.getElementById(`frame-${n}`); if(f) f.classList.add('frame-exit'); setTimeout(() => { if(f) f.remove(); }, 400); }
+
+    function nextStep() {
+        if (step < flow.length - 1) {
+            step++;
+            const current = flow[step];
+            highlightLine(current.line);
+            document.getElementById('commentary').innerText = current.msg;
+            current.action();
+        } else {
+            document.getElementById('nextBtn').disabled = true;
+        }
+    }
+</script>
+</body>
+</html>

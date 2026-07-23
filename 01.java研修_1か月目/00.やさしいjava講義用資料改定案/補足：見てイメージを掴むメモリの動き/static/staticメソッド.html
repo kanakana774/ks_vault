@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Java Memory - Static vs Instance Methods</title>
+    <style>
+        :root {
+            --bg-body: #f1f5f9;
+            --bg-card: #ffffff;
+            --stack-color: #3b82f6;
+            --heap-color: #10b981;
+            --static-color: #f43f5e;
+            --accent: #f59e0b;
+            --error: #ef4444;
+            --text-main: #1e293b;
+            --text-sub: #64748b;
+            --border: #e2e8f0;
+            --console-bg: #1e293b;
+        }
+
+        body { font-family: 'Segoe UI', system-ui, sans-serif; background-color: var(--bg-body); color: var(--text-main); margin: 0; padding: 10px; display: flex; flex-direction: column; align-items: center; }
+
+        .container { display: flex; gap: 15px; width: 100%; max-width: 1200px; height: 68vh; min-height: 550px; }
+
+        .code-panel { flex: 0.9; background: #282c34; color: #d1d5db; padding: 15px; border-radius: 12px; font-family: 'Cascadia Code', 'Consolas', monospace; font-size: 0.75rem; line-height: 1.4; overflow-y: auto; }
+        .line { padding: 2px 8px; border-radius: 4px; transition: 0.2s; opacity: 0.7; border-left: 4px solid transparent; white-space: pre; }
+        .line.active { opacity: 1; background: #3e4451; border-left-color: var(--accent); color: #fff; }
+
+        .memory-panel { flex: 2; background: var(--bg-card); border-radius: 12px; border: 1px solid var(--border); position: relative; display: flex; flex-direction: column; padding: 15px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+        .memory-header { font-weight: bold; font-size: 0.65rem; color: var(--text-sub); text-transform: uppercase; margin-bottom: 3px; }
+
+        /* 静的領域 */
+        .static-area { flex: 0 0 80px; background: #fff1f2; border: 2px solid #fecdd3; border-radius: 10px; padding: 8px; position: relative; margin-bottom: 10px; }
+        .static-class-label { font-size: 0.55rem; background: var(--static-color); color: white; padding: 1px 4px; border-radius: 3px; position: absolute; top: -7px; left: 10px; }
+        .method-box { display: inline-block; padding: 3px 8px; border-radius: 4px; font-size: 0.7rem; margin-right: 5px; border: 1px solid transparent; transition: 0.3s; }
+        .is-static { background: #ffe4e6; border-color: var(--static-color); color: var(--static-color); }
+        .is-instance { background: #f0fdf4; border-color: var(--heap-color); color: var(--heap-color); }
+
+        /* スタック */
+        .stack-area { flex: 0 0 140px; background: #f8fafc; border-radius: 10px; border: 2px solid var(--border); margin-bottom: 10px; display: flex; flex-direction: column-reverse; padding: 8px; gap: 5px; position: relative; }
+        .stack-frame { border: 1px solid #cbd5e1; background: rgba(255,255,255,0.8); border-radius: 6px; padding: 6px; position: relative; }
+        .frame-label { position: absolute; top: -7px; right: 8px; font-size: 0.55rem; background: #94a3b8; color: white; padding: 1px 4px; border-radius: 3px; }
+        .stack-var { width: 110px; padding: 3px 8px; border-radius: 4px; background: #fff; border: 1px solid var(--border); display: flex; justify-content: space-between; font-size: 0.7rem; }
+
+        /* ヒープ */
+        .heap-area { flex: 1; background: #f0fdf4; border-radius: 10px; border: 2px dashed var(--heap-color); position: relative; overflow: hidden; }
+        .heap-obj { position: absolute; background: #fff; border: 2px solid var(--heap-color); border-radius: 8px; padding: 8px; min-width: 100px; z-index: 20; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        
+        #connector-canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 10; }
+
+        .console-container { width: 100%; max-width: 1200px; margin-top: 10px; background: var(--console-bg); border-radius: 8px; padding: 10px; color: #fff; font-family: 'Consolas', monospace; font-size: 0.85rem; }
+        .commentary { margin-top: 8px; font-size: 0.95rem; font-weight: 500; background: #fff; padding: 6px 20px; border-radius: 30px; border: 1px solid var(--border); text-align: center; max-width: 900px;}
+        .btn-group { display: flex; gap: 10px; margin-top: 8px; }
+        button { padding: 8px 20px; border-radius: 8px; border: none; background: var(--text-main); color: #fff; font-weight: 600; cursor: pointer; }
+        .btn-reset { background: #fff; color: var(--text-main); border: 1px solid var(--border); }
+        
+        .glow-static { box-shadow: 0 0 15px var(--static-color); border-width: 2px; }
+        .glow-instance { box-shadow: 0 0 15px var(--heap-color); border-width: 2px; }
+        .shake { animation: shake 0.3s; color: var(--error) !important; font-weight: bold; }
+        @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-5px); } 75% { transform: translateX(5px); } }
+    </style>
+</head>
+<body>
+
+    <h2 style="margin: 0 0 10px 0;">Java Memory: Static Method vs Instance Method</h2>
+
+    <div class="container">
+        <div class="code-panel">
+<div class="line" id="l1">class Robot {</div>
+<div class="line" id="l2">  static void sayHello() { ... }</div>
+<div class="line" id="l3">  void sayName() { ... }</div>
+<div class="line" id="l4">}</div>
+<div class="line" id="l5">public class Main {</div>
+<div class="line" id="l6">  public static void main(String[] args) {</div>
+<div class="line" id="l7">    Robot.sayHello(); // static呼び出し</div>
+<div class="line" id="l8">    Robot rb = null;</div>
+<div class="line" id="l9">    rb.sayName();     // エラー発生！</div>
+<div class="line" id="l10">    rb = new Robot();</div>
+<div class="line" id="l11">    rb.sayName();     // 成功！</div>
+<div class="line" id="l12">  }</div>
+<div class="line" id="l13">}</div>
+        </div>
+
+        <div class="memory-panel" id="memory-root">
+            <svg id="connector-canvas"></svg>
+            
+            <div class="memory-header">Static Area (Class Definition)</div>
+            <div class="static-area" id="static-area">
+                <div class="static-class-label">Robot class</div>
+                <div class="method-box is-static" id="m-static">sayHello() [static]</div>
+                <div class="method-box is-instance" id="m-instance">sayName() [instance]</div>
+            </div>
+
+            <div class="memory-header">Stack (Frames)</div>
+            <div class="stack-area" id="stack-area"></div>
+
+            <div class="memory-header">Heap (Object Instance)</div>
+            <div class="heap-area" id="heap-area"></div>
+        </div>
+    </div>
+
+    <div class="console-container"><div id="console-out">> waiting...</div></div>
+    <div class="commentary" id="commentary">「次へ」で開始</div>
+    <div class="btn-group">
+        <button id="nextBtn" onclick="nextStep()">次へ進む</button>
+        <button class="btn-reset" onclick="location.reload()">リセット</button>
+    </div>
+
+<script>
+    let step = -1;
+    let activeArrows = [];
+
+    const flow = [
+        { line: 'l1', msg: "【クラスロード】Robotクラスが読み込まれ、メソッドの定義が静的領域に配置されます。", action: () => { document.getElementById('static-area').style.opacity = 1; } },
+        
+        { line: 'l6', msg: "mainメソッドを開始します。", action: () => { createFrame('main'); } },
+
+        { line: 'l7', msg: "Robot.sayHello() : インスタンスは不要。直接クラスの静的領域にある処理を実行します。", action: () => { flashElement('m-static', 'glow-static'); } },
+
+        { line: 'l8', msg: "【定義】変数 rb をスタックに用意します。中身は null です。", action: () => { pushVar('main', 'rb', 'null', 'var-ref'); } },
+
+        { line: 'l9', msg: "rb.sayName() : インスタンスメソッドを呼ぼうとしますが、参照先が null です！", action: () => { flashElement('var-main-rb', 'shake'); } },
+        { line: 'l9', msg: "エラー：NullPointerException。辿るべき実体（インスタンス）がヒープに存在しません。", action: () => { document.getElementById('console-out').innerText = "> Error: NullPointerException!"; document.getElementById('console-out').style.color = 'var(--error)'; } },
+
+        { line: 'l10', msg: "【代入】new Robot() でヒープに実体を作成。変数 rb に住所(0x88)を格納します。", action: () => { addHeapObj('rb-obj', '0x88', 20, 30); updateVar('main', 'rb', '0x88'); registerArrow('main-rb', 'rb-obj', '#10b981'); document.getElementById('console-out').style.color = '#10b981'; } },
+
+        { line: 'l11', msg: "rb.sayName() : 今度は住所(0x88)を辿ってヒープの実体を確認できます。成功！", action: () => { flashElement('rb-obj', 'glow-instance'); setTimeout(() => flashElement('m-instance', 'glow-instance'), 400); } },
+        { line: 'l11', msg: "インスタンスメソッドは、このように「どの実体に対する操作か」を特定して実行されます。", action: () => { document.getElementById('console-out').innerText = "> Hello, I am Robot 0x88"; } }
+    ];
+
+    function highlightLine(id) { document.querySelectorAll('.line').forEach(l => l.classList.remove('active')); const t = document.getElementById(id); if (t) t.classList.add('active'); }
+    function createFrame(n) { const d = document.createElement('div'); d.id=`frame-${n}`; d.className='stack-frame'; d.innerHTML=`<div class="frame-label">${n}()</div><div id="vars-${n}"></div>`; document.getElementById('stack-area').appendChild(d); refresh(); }
+    function pushVar(f, v, val, c) { const con = document.getElementById(`vars-${f}`); const d = document.createElement('div'); d.id=`var-${f}-${v}`; d.className=`stack-var ${c}`; d.innerHTML=`<span>${v}</span><strong>${val}</strong>`; con.appendChild(d); setTimeout(refresh, 50); }
+    function updateVar(f, v, n) { const e = document.getElementById(`var-${f}-${v}`); if(e) { e.querySelector('strong').innerText=n; e.classList.add('update-flash'); setTimeout(()=>e.classList.remove('update-flash'), 800); } }
+    
+    function addHeapObj(id, addr, x, y) { 
+        const d = document.createElement('div'); d.id=id; d.className='heap-obj'; d.style.left=x+'px'; d.style.top=y+'px';
+        d.innerHTML=`<div class="obj-title">Robot Instance (${addr})</div><div style="font-size:0.6rem; color:#aaa;">(Method pointer to class)</div>`;
+        document.getElementById('heap-area').appendChild(d);
+    }
+
+    function flashElement(id, className) {
+        const el = document.getElementById(id);
+        el.classList.add(className);
+        setTimeout(() => el.classList.remove(className), 800);
+    }
+
+    function registerArrow(f, t, c) { activeArrows.push({from:f, to:t, color:c}); refresh(); }
+    
+    function refresh() {
+        const svg = document.getElementById('connector-canvas'); svg.innerHTML = '';
+        const root = document.getElementById('memory-root').getBoundingClientRect();
+        activeArrows.forEach(a => {
+            const fEl = document.getElementById(`var-${a.from}`);
+            const tEl = document.getElementById(a.to);
+            if(!fEl || !tEl) return;
+            const fR = fEl.getBoundingClientRect(); const tR = tEl.getBoundingClientRect();
+            const x1 = fR.right - root.left; const y1 = fR.top + fR.height/2 - root.top;
+            const x2 = tR.left - root.left; const y2 = tR.top + tR.height/2 - root.top;
+            const p = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+            const cp = x1 + (x2-x1)*0.4; p.setAttribute('d', `M ${x1} ${y1} C ${cp} ${y1}, ${cp} ${y2}, ${x2} ${y2}`);
+            p.setAttribute('stroke', a.color); p.setAttribute('stroke-width', '2'); p.setAttribute('fill', 'none'); svg.appendChild(p);
+        });
+    }
+
+    function nextStep() {
+        if (step < flow.length - 1) { step++; const c = flow[step]; highlightLine(c.line); document.getElementById('commentary').innerText = c.msg; c.action(); }
+        else { document.getElementById('nextBtn').disabled = true; }
+    }
+    window.addEventListener('resize', refresh);
+</script>
+</body>
+</html>

@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Java Memory - Static Members Roles</title>
+    <style>
+        :root {
+            --bg-body: #f1f5f9;
+            --bg-card: #ffffff;
+            --stack-color: #3b82f6;
+            --static-color: #f43f5e;
+            --accent: #f59e0b;
+            --text-main: #1e293b;
+            --text-sub: #64748b;
+            --border: #e2e8f0;
+            --console-bg: #1e293b;
+        }
+
+        body { font-family: 'Segoe UI', system-ui, sans-serif; background-color: var(--bg-body); color: var(--text-main); margin: 0; padding: 10px; display: flex; flex-direction: column; align-items: center; }
+        .container { display: flex; gap: 15px; width: 100%; max-width: 1250px; height: 68vh; min-height: 550px; }
+
+        .code-panel { flex: 0.9; background: #282c34; color: #d1d5db; padding: 15px; border-radius: 12px; font-family: 'Cascadia Code', 'Consolas', monospace; font-size: 0.8rem; line-height: 1.4; overflow-y: auto; }
+        .line { padding: 1px 8px; border-radius: 4px; transition: 0.2s; opacity: 0.7; border-left: 4px solid transparent; white-space: pre; }
+        .line.active { opacity: 1; background: #3e4451; border-left-color: var(--static-color); color: #fff; }
+
+        .memory-panel { flex: 2; background: var(--bg-card); border-radius: 12px; border: 1px solid var(--border); position: relative; display: flex; flex-direction: column; padding: 15px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+        .memory-header { font-weight: bold; font-size: 0.65rem; color: var(--text-sub); text-transform: uppercase; margin-bottom: 3px; margin-top: 5px; }
+
+        /* 静的領域 (Metaspace / Static Area) */
+        .static-area { flex: 0 0 110px; background: #fff1f2; border: 2px solid #fecdd3; border-radius: 10px; padding: 10px; position: relative; margin-bottom: 10px; display: flex; flex-direction: column; gap: 8px; opacity: 0.3; transition: 0.5s; }
+        .static-class-label { font-size: 0.55rem; background: var(--static-color); color: white; padding: 1px 4px; border-radius: 3px; position: absolute; top: -7px; left: 10px; }
+        .static-field-box { background: white; border: 1px solid var(--static-color); padding: 5px 12px; border-radius: 5px; font-size: 0.75rem; width: 140px; display: flex; justify-content: space-between; }
+        .method-list { display: flex; gap: 10px; }
+        .method-def { padding: 2px 8px; background: #fff; border: 1px solid var(--static-color); border-radius: 4px; font-size: 0.65rem; color: var(--static-color); font-weight: bold; }
+
+        /* スタック領域 */
+        .stack-area { flex: 0 0 160px; background: #f8fafc; border-radius: 10px; border: 2px solid var(--border); margin-bottom: 10px; display: flex; flex-direction: column-reverse; padding: 8px; gap: 5px; position: relative; z-index: 5; }
+        .stack-frame { border: 1px solid #cbd5e1; background: rgba(255,255,255,0.8); border-radius: 6px; padding: 6px; position: relative; }
+        .frame-label { position: absolute; top: -7px; right: 8px; font-size: 0.55rem; background: #94a3b8; color: white; padding: 1px 4px; border-radius: 3px; }
+        .stack-var { width: 115px; padding: 3px 8px; border-radius: 4px; background: #fff; border: 1px solid var(--border); display: flex; justify-content: space-between; font-size: 0.7rem; }
+
+        /* ヒープ領域（今回不使用） */
+        .heap-area { flex: 1; background: #f1f5f9; border: 2px dashed #cbd5e1; border-radius: 10px; display: flex; align-items: center; justify-content: center; }
+        .heap-empty-msg { font-size: 0.7rem; color: #94a3b8; font-style: italic; text-align: center; }
+
+        #connector-canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 10; }
+
+        .console-container { width: 100%; max-width: 1250px; margin-top: 10px; background: var(--console-bg); border-radius: 8px; padding: 10px; color: #fff; font-family: 'Consolas', monospace; font-size: 0.85rem; }
+        .commentary { margin-top: 8px; font-size: 0.95rem; font-weight: 500; background: #fff; padding: 6px 20px; border-radius: 30px; border: 1px solid var(--border); text-align: center; max-width: 900px; min-height: 1.5em;}
+        .btn-group { display: flex; gap: 10px; margin-top: 8px; }
+        button { padding: 8px 20px; border-radius: 8px; border: none; background: var(--text-main); color: #fff; font-weight: 600; cursor: pointer; }
+
+        .update-flash { animation: flash 0.8s; }
+        .method-glow { box-shadow: 0 0 10px var(--static-color); border-width: 2px; }
+        @keyframes flash { 0% { background-color: var(--accent); color: white; } 100% { background-color: white; color: inherit; } }
+        .frame-exit { opacity: 0; filter: blur(5px); transform: scale(0.95); transition: 0.4s; }
+    </style>
+</head>
+<body>
+
+    <h2 style="margin: 0 0 10px 0;">Java Memory: Pure Static Roles (Utility vs Field)</h2>
+
+    <div class="container">
+        <div class="code-panel">
+<div class="line" id="l1">class MyUtils {</div>
+<div class="line" id="l2">  static int callCount = 0;</div>
+<div class="line" id="l3"></div>
+<div class="line" id="l4">  static int add(int a, int b) {</div>
+<div class="line" id="l5">    return a + b; // フィールド不使用</div>
+<div class="line" id="l6">  }</div>
+<div class="line" id="l7"></div>
+<div class="line" id="l8">  static void record() {</div>
+<div class="line" id="l9">    callCount++; // フィールドを更新</div>
+<div class="line" id="l10">  }</div>
+<div class="line" id="l11">}</div>
+<div class="line" id="l12">public class Main {</div>
+<div class="line" id="l13">  public static void main(String[] args) {</div>
+<div class="line" id="l14">    int sum = MyUtils.add(10, 20);</div>
+<div class="line" id="l15">    MyUtils.record();</div>
+<div class="line" id="l16">    System.out.println("sum:" + sum + ", count:" + MyUtils.callCount);</div>
+<div class="line" id="l17">  }</div>
+<div class="line" id="l18">}</div>
+        </div>
+
+        <div class="memory-panel">
+            <div class="memory-header">Static Area (Class Definition)</div>
+            <div class="static-area" id="static-area">
+                <div class="static-class-label">MyUtils class</div>
+                <div class="static-field-box" id="s-field">callCount: <strong id="s-val">0</strong></div>
+                <div class="method-list">
+                    <div class="method-def" id="m-add">add(int, int)</div>
+                    <div class="method-def" id="m-record">record()</div>
+                </div>
+            </div>
+
+            <div class="memory-header">Stack (Execution Frames)</div>
+            <div class="stack-area" id="stack-area"></div>
+
+            <div class="memory-header">Heap (Object Instances)</div>
+            <div class="heap-area">
+                <div class="heap-empty-msg">staticメンバーのみの実行では<br>ヒープ（インスタンス）は使われません</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="console-container"><div id="console-out">> waiting...</div></div>
+    <div class="commentary" id="commentary">「次へ」で開始</div>
+    <div class="btn-group">
+        <button id="nextBtn" onclick="nextStep()">次へ進む</button>
+        <button onclick="location.reload()" style="background:#fff; color:#333; border:1px solid #ccc; padding: 8px 20px; border-radius: 8px; cursor: pointer;">リセット</button>
+    </div>
+
+<script>
+    let step = -1;
+
+    const flow = [
+        { line: 'l2', msg: "【クラスロード】MyUtilsが読み込まれ、静的領域に変数とメソッド定義が準備されます。", action: () => { document.getElementById('static-area').style.opacity = 1; } },
+        { line: 'l13', msg: "mainメソッドを開始します。スタックフレームが生成されます。", action: () => { createFrame('main'); } },
+
+        { line: 'l14', msg: "MyUtils.add(10, 20) を呼び出します。ユーティリティ的な計算を行います。", action: () => { } },
+        { line: 'l4', msg: "【定義】addフレーム生成。引数 a(10), b(20) が用意されます。", action: () => { createFrame('add'); pushVar('add', 'a', '10', ''); pushVar('add', 'b', '20', ''); document.getElementById('m-add').classList.add('method-glow'); } },
+        { line: 'l5', msg: "【処理】引数だけを使って計算。静的領域のフィールドには一切触れません。", action: () => { document.getElementById('m-add').classList.add('update-flash'); } },
+        { line: 'l6', msg: "メソッド終了。計算結果 30 を返し、フレームは破棄されます。", action: () => { removeFrame('add'); document.getElementById('m-add').classList.remove('method-glow'); } },
+        { line: 'l14', msg: "【代入】mainの変数 sum に 30 が格納されます。", action: () => { pushVar('main', 'sum', '30', ''); } },
+
+        { line: 'l15', msg: "MyUtils.record() を呼び出します。こちらは状態を管理するメソッドです。", action: () => { } },
+        { line: 'l8', msg: "【定義】recordフレーム生成。引数はないため、箱は作られません。", action: () => { createFrame('record'); document.getElementById('m-record').classList.add('method-glow'); } },
+        { line: 'l9', msg: "【更新】静的領域にある callCount をインクリメントします。", action: () => { updateStaticVar(1); } },
+        { line: 'l10', msg: "メソッド終了。フレームが破棄されます。", action: () => { removeFrame('record'); document.getElementById('m-record').classList.remove('method-glow'); } },
+
+        { line: 'l16', msg: "println実行。スタックの sum と、静的領域の callCount を読み取ります。", action: () => { document.getElementById('console-out').innerText = "> sum: 30, count: 1"; } }
+    ];
+
+    function highlightLine(id) { document.querySelectorAll('.line').forEach(l => l.classList.remove('active')); const t = document.getElementById(id); if (t) t.classList.add('active'); }
+    function createFrame(n) { const d = document.createElement('div'); d.id=`frame-${n}`; d.className='stack-frame'; d.innerHTML=`<div class="frame-label">${n}()</div><div id="vars-${n}"></div>`; document.getElementById('stack-area').appendChild(d); }
+    function pushVar(f, v, val, c) { const con = document.getElementById(`vars-${f}`); if(!con) return; const d = document.createElement('div'); d.id=`var-${f}-${v}`; d.className=`stack-var ${c}`; d.innerHTML=`<span>${v}</span><strong>${val}</strong>`; con.appendChild(d); }
+    function removeFrame(n) { const f = document.getElementById(`frame-${n}`); if(f) f.classList.add('frame-exit'); setTimeout(() => { if(f) f.remove(); }, 400); }
+    
+    function updateStaticVar(n) { 
+        const e = document.getElementById('s-val'); 
+        e.innerText = parseInt(e.innerText) + n;
+        document.getElementById('s-field').classList.add('update-flash'); 
+        setTimeout(()=>document.getElementById('s-field').classList.remove('update-flash'), 800); 
+    }
+
+    function nextStep() {
+        if (step < flow.length - 1) { step++; const c = flow[step]; highlightLine(c.line); document.getElementById('commentary').innerText = c.msg; c.action(); }
+        else { document.getElementById('nextBtn').disabled = true; }
+    }
+</script>
+</body>
+</html>

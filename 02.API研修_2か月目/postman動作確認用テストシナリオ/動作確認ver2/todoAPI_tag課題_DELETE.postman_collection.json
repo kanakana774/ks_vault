@@ -1,0 +1,1223 @@
+{
+	"info": {
+		"_postman_id": "5f608587-e0e3-4c2d-806b-89dd104cd418",
+		"name": "todoAPI_tag課題_DELETE",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "46456941"
+	},
+	"item": [
+		{
+			"name": "タグ新規作成_正常系",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"ステータスコードは201\", () => {\r",
+							"  pm.response.to.have.status(201);\r",
+							"});\r",
+							"\r",
+							"const location = pm.response.headers.get(\"Location\");\r",
+							"\r",
+							"pm.test(\"Location ヘッダにID付きURLを含む\", () => {\r",
+							"  pm.expect(location).to.match(/\\/tags\\/\\d+$/);\r",
+							"});\r",
+							"\r",
+							"const idMatch = location.match(/\\/tags\\/(\\d+)$/);\r",
+							"if (idMatch) {\r",
+							"  pm.environment.set(\"created_tag_id\", idMatch[1]);\r",
+							"  pm.environment.set(\"version\", 0);\r",
+							"}"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"name\":\"タグ新規作成_正常系\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:8080/tags",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"tags"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "タグ新規作成_異常系_400_bodyにnameがない",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"ステータスコードは400\", () => {\r",
+							"  pm.response.to.have.status(400);\r",
+							"});\r",
+							"pm.test(\"codeはbadRequest.invalid-field\", () => {\r",
+							"  const responseJson = pm.response.json();\r",
+							"  pm.expect(responseJson.code).to.eql('badRequest.invalid-field');\r",
+							"});"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:8080/tags",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"tags"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "タグ新規作成_異常系_400_nameが空",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"ステータスコードは400\", () => {\r",
+							"  pm.response.to.have.status(400);\r",
+							"});\r",
+							"pm.test(\"codeはbadRequest.invalid-field\", () => {\r",
+							"  const responseJson = pm.response.json();\r",
+							"  pm.expect(responseJson.code).to.eql('badRequest.invalid-field');\r",
+							"});"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"name\":\"\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:8080/tags",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"tags"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "タグ新規作成_異常系_400_nameが30文字以上",
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							""
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"ステータスコードは400\", () => {\r",
+							"  pm.response.to.have.status(400);\r",
+							"});\r",
+							"pm.test(\"codeはbadRequest.invalid-field\", () => {\r",
+							"  const responseJson = pm.response.json();\r",
+							"  pm.expect(responseJson.code).to.eql('badRequest.invalid-field');\r",
+							"});"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"name\":\"0123456789012345678901234567890123456789\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:8080/tags",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"tags"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "一件取得_正常系",
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							""
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"ステータスコードは200\", () => {\r",
+							"  pm.response.to.have.status(200);\r",
+							"});\r",
+							"\r",
+							"pm.test(\"レスポンスボディに正しいIDが含まれる\", () => {\r",
+							"  const jsonData = pm.response.json();\r",
+							"  pm.expect(jsonData.tagId).to.eql(parseInt(pm.environment.get(\"created_tag_id\")));\r",
+							"});"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:8080/tags/{{created_tag_id}}",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"tags",
+						"{{created_tag_id}}"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "一件取得_異常系_404_存在しないタグid",
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							""
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"ステータスコードは404\", () => {\r",
+							"  pm.response.to.have.status(404);\r",
+							"});\r",
+							"pm.test(\"codeはnotFound.resource\", () => {\r",
+							"  const responseJson = pm.response.json();\r",
+							"  pm.expect(responseJson.code).to.eql('notFound.resource');\r",
+							"});"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:8080/tags/99999",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"tags",
+						"99999"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "更新_正常系",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"ステータスコードは204\", () => {\r",
+							"  pm.response.to.have.status(204);\r",
+							"});\r",
+							"pm.environment.set(\"version\",parseInt(pm.environment.get(\"version\")) + 1);"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "PUT",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\"name\":\"put1\", \"version\":0}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:8080/tags/{{created_tag_id}}",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"tags",
+						"{{created_tag_id}}"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "更新_確認",
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							""
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"ステータスコードは200\", () => {\r",
+							"  pm.response.to.have.status(200);\r",
+							"});\r",
+							"\r",
+							"pm.test(\"レスポンスボディに正しいversionが含まれる\", () => {\r",
+							"  const jsonData = pm.response.json();\r",
+							"  pm.expect(jsonData.version).to.eql(parseInt(pm.environment.get(\"version\")));\r",
+							"});"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:8080/tags/{{created_tag_id}}",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"tags",
+						"{{created_tag_id}}"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "更新_異常系_400_bodyにnameがない",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"ステータスコードは400\", () => {\r",
+							"  pm.response.to.have.status(400);\r",
+							"});\r",
+							"pm.test(\"codeはbadRequest.invalid-field\", () => {\r",
+							"  const responseJson = pm.response.json();\r",
+							"  pm.expect(responseJson.code).to.eql('badRequest.invalid-field');\r",
+							"});"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "PUT",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\"version\":{{version}}}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:8080/tags/{{created_tag_id}}",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"tags",
+						"{{created_tag_id}}"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "更新_異常系_400_nameが空",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"ステータスコードは400\", () => {\r",
+							"  pm.response.to.have.status(400);\r",
+							"});\r",
+							"pm.test(\"codeはbadRequest.invalid-field\", () => {\r",
+							"  const responseJson = pm.response.json();\r",
+							"  pm.expect(responseJson.code).to.eql('badRequest.invalid-field');\r",
+							"});"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "PUT",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\"name\":\"\", \"version\":{{version}}}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:8080/tags/{{created_tag_id}}",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"tags",
+						"{{created_tag_id}}"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "更新_異常系_400_nameが30字以上",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"ステータスコードは400\", () => {\r",
+							"  pm.response.to.have.status(400);\r",
+							"});\r",
+							"pm.test(\"codeはbadRequest.invalid-field\", () => {\r",
+							"  const responseJson = pm.response.json();\r",
+							"  pm.expect(responseJson.code).to.eql('badRequest.invalid-field');\r",
+							"});"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "PUT",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\"name\":\"0123456789012345678901234567890\", \"version\":{{version}}}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:8080/tags/{{created_tag_id}}",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"tags",
+						"{{created_tag_id}}"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "更新_異常系_404_存在しないタグid",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"ステータスコードは404\", () => {\r",
+							"  pm.response.to.have.status(404);\r",
+							"});\r",
+							"pm.test(\"codeはnotFound.resource\", () => {\r",
+							"  const responseJson = pm.response.json();\r",
+							"  pm.expect(responseJson.code).to.eql('notFound.resource');\r",
+							"});"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "PUT",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\"name\":\"update\",\"version\":{{version}}}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:8080/tags/99999",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"tags",
+						"99999"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "更新_異常系_409_楽観ロックエラー",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"ステータスコードは409\", () => {\r",
+							"  pm.response.to.have.status(409);\r",
+							"});\r",
+							"pm.test(\"codeはconflict.optimistic\", () => {\r",
+							"  const responseJson = pm.response.json();\r",
+							"  pm.expect(responseJson.code).to.eql('conflict.optimistic');\r",
+							"});"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "PUT",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\"name\":\"put1\",\"version\":99999}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:8080/tags/{{created_tag_id}}",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"tags",
+						"{{created_tag_id}}"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "削除_異常系_400_bodyにversionがない",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"ステータスコードは400\", () => {\r",
+							"  pm.response.to.have.status(400);\r",
+							"});\r",
+							"pm.test(\"codeはbadRequest.invalid-field\", () => {\r",
+							"  const responseJson = pm.response.json();\r",
+							"  pm.expect(responseJson.code).to.eql('badRequest.invalid-field');\r",
+							"});"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "DELETE",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:8080/tags/{{created_tag_id}}",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"tags",
+						"{{created_tag_id}}"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "削除_異常系_404_存在しないタグid",
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							""
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"ステータスコードは404\", () => {\r",
+							"  pm.response.to.have.status(404);\r",
+							"});\r",
+							"pm.test(\"codeはnotFound.resource\", () => {\r",
+							"  const responseJson = pm.response.json();\r",
+							"  pm.expect(responseJson.code).to.eql('notFound.resource');\r",
+							"});"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "DELETE",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\"name\":\"delete1\",\"version\":{{version}}}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:8080/tags/99999",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"tags",
+						"99999"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "削除_異常系_409_楽観ロックエラー",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"ステータスコードは409\", () => {\r",
+							"  pm.response.to.have.status(409);\r",
+							"});\r",
+							"pm.test(\"codeはconflict.optimistic\", () => {\r",
+							"  const responseJson = pm.response.json();\r",
+							"  pm.expect(responseJson.code).to.eql('conflict.optimistic');\r",
+							"});"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "DELETE",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\"version\":99999}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:8080/tags/{{created_tag_id}}",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"tags",
+						"{{created_tag_id}}"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "削除_正常系",
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							""
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"ステータスコードは204\", () => {\r",
+							"  pm.response.to.have.status(204);\r",
+							"});"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "DELETE",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\"version\":{{version}}}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:8080/tags/{{created_tag_id}}",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"tags",
+						"{{created_tag_id}}"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "一覧取得_データ作成1",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"ステータスコードは201\", () => {\r",
+							"  pm.response.to.have.status(201);\r",
+							"});\r",
+							"\r",
+							"const location = pm.response.headers.get(\"Location\");\r",
+							"\r",
+							"pm.test(\"Location ヘッダにID付きURLを含む\", () => {\r",
+							"  pm.expect(location).to.match(/\\/tags\\/\\d+$/);\r",
+							"});\r",
+							"\r",
+							"const idMatch = location.match(/\\/tags\\/(\\d+)$/);\r",
+							"if (idMatch) {\r",
+							"  pm.environment.set(\"created_tag_id1\", idMatch[1]);\r",
+							"}"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"name\":\"gEt100\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:8080/tags",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"tags"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "一覧取得_データ作成2",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"ステータスコードは201\", () => {\r",
+							"  pm.response.to.have.status(201);\r",
+							"});\r",
+							"\r",
+							"const location = pm.response.headers.get(\"Location\");\r",
+							"\r",
+							"pm.test(\"Location ヘッダにID付きURLを含む\", () => {\r",
+							"  pm.expect(location).to.match(/\\/tags\\/\\d+$/);\r",
+							"});\r",
+							"\r",
+							"const idMatch = location.match(/\\/tags\\/(\\d+)$/);\r",
+							"if (idMatch) {\r",
+							"  pm.environment.set(\"created_tag_id2\", idMatch[1]);\r",
+							"}"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"name\":\"geT2\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:8080/tags",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"tags"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "一覧取得_データ作成3",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"ステータスコードは201\", () => {\r",
+							"  pm.response.to.have.status(201);\r",
+							"});\r",
+							"\r",
+							"const location = pm.response.headers.get(\"Location\");\r",
+							"\r",
+							"pm.test(\"Location ヘッダにID付きURLを含む\", () => {\r",
+							"  pm.expect(location).to.match(/\\/tags\\/\\d+$/);\r",
+							"});\r",
+							"\r",
+							"const idMatch = location.match(/\\/tags\\/(\\d+)$/);\r",
+							"if (idMatch) {\r",
+							"  pm.environment.set(\"created_tag_id3\", idMatch[1]);\r",
+							"}"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"name\":\"Get0.30\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:8080/tags",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"tags"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "一覧取得_データ作成4",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"ステータスコードは201\", () => {\r",
+							"  pm.response.to.have.status(201);\r",
+							"});\r",
+							"\r",
+							"const location = pm.response.headers.get(\"Location\");\r",
+							"\r",
+							"pm.test(\"Location ヘッダにID付きURLを含む\", () => {\r",
+							"  pm.expect(location).to.match(/\\/tags\\/\\d+$/);\r",
+							"});\r",
+							"\r",
+							"const idMatch = location.match(/\\/tags\\/(\\d+)$/);\r",
+							"if (idMatch) {\r",
+							"  pm.environment.set(\"created_tag_id4\", idMatch[1]);\r",
+							"}"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"name\":\"got4\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:8080/tags",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"tags"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "一覧取得_正常系",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"ステータスコードは200\", () => {\r",
+							"  pm.response.to.have.status(200);\r",
+							"});\r",
+							"\r",
+							"pm.test(\"レスポンスボディに正しいIDが含まれる\", () => {\r",
+							"  const jsonData = pm.response.json();\r",
+							"  pm.expect(jsonData[0].tagId).to.eql(parseInt(pm.environment.get(\"created_tag_id1\")));\r",
+							"  pm.expect(jsonData[1].tagId).to.eql(parseInt(pm.environment.get(\"created_tag_id2\")));\r",
+							"  pm.expect(jsonData[2].tagId).to.eql(parseInt(pm.environment.get(\"created_tag_id3\")));\r",
+							"});"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:8080/tags?name=eT",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"tags"
+					],
+					"query": [
+						{
+							"key": "name",
+							"value": "eT"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "一覧取得_正常系_検索結果なし",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"ステータスコードは200\", () => {\r",
+							"  pm.response.to.have.status(200);\r",
+							"});\r",
+							"\r",
+							"pm.test(\"レスポンスボディが空\", () => {\r",
+							"  const jsonData = pm.response.json();\r",
+							"  pm.expect(jsonData).to.be.empty;\r",
+							"});"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:8080/tags?name=xxx",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"tags"
+					],
+					"query": [
+						{
+							"key": "name",
+							"value": "xxx"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "一覧取得_正常系_name指定なし",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"ステータスコードは200\", () => {\r",
+							"  pm.response.to.have.status(200);\r",
+							"});\r",
+							"\r",
+							"pm.test(\"レスポンスボディに正しいIDが含まれる\", () => {\r",
+							"  const jsonData = pm.response.json();\r",
+							"  pm.expect(jsonData[0].tagId).to.eql(parseInt(pm.environment.get(\"created_tag_id1\")));\r",
+							"  pm.expect(jsonData[1].tagId).to.eql(parseInt(pm.environment.get(\"created_tag_id2\")));\r",
+							"  pm.expect(jsonData[2].tagId).to.eql(parseInt(pm.environment.get(\"created_tag_id3\")));\r",
+							"  pm.expect(jsonData[3].tagId).to.eql(parseInt(pm.environment.get(\"created_tag_id4\")));\r",
+							"});"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:8080/tags",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"tags"
+					],
+					"query": [
+						{
+							"key": "",
+							"value": "",
+							"disabled": true
+						}
+					]
+				}
+			},
+			"response": []
+		}
+	],
+	"variable": [
+		{
+			"key": "created_tag_id",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "version",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "created_tag_id1",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "created_tag_id2",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "created_tag_id3",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "created_tag_id4",
+			"value": "",
+			"type": "string"
+		}
+	]
+}

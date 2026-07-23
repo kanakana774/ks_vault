@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Java Memory - List of Objects (Fixed)</title>
+    <style>
+        :root {
+            --bg-body: #f1f5f9;
+            --bg-card: #ffffff;
+            --primary: #3b82f6;
+            --secondary: #10b981;
+            --obj-color: #f59e0b;
+            --accent: #ef4444;
+            --text-main: #1e293b;
+            --text-sub: #64748b;
+            --border: #e2e8f0;
+            --stack-bg: #f8fafc;
+            --heap-bg: #f0fdf4;
+            --console-bg: #1e293b;
+        }
+
+        body { font-family: 'Segoe UI', system-ui, sans-serif; background-color: var(--bg-body); color: var(--text-main); margin: 0; padding: 10px; display: flex; flex-direction: column; align-items: center; }
+
+        .container { display: flex; gap: 20px; width: 100%; max-width: 1200px; height: 62vh; min-height: 500px; }
+
+        .code-panel { flex: 0.9; background: #282c34; color: #d1d5db; padding: 15px; border-radius: 12px; font-family: 'Cascadia Code', 'Consolas', monospace; font-size: 0.8rem; line-height: 1.4; overflow-y: auto; }
+        .line { padding: 2px 8px; border-radius: 4px; transition: 0.2s; opacity: 0.7; border-left: 4px solid transparent; white-space: pre; }
+        .line.active { opacity: 1; background: #3e4451; border-left-color: var(--obj-color); color: #fff; }
+
+        .memory-panel { flex: 2; background: var(--bg-card); border-radius: 12px; border: 1px solid var(--border); position: relative; display: flex; flex-direction: column; padding: 15px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+        .memory-header { font-weight: bold; font-size: 0.7rem; color: var(--text-sub); text-transform: uppercase; margin-bottom: 5px; }
+
+        .stack-area { flex: 0 0 160px; background: var(--stack-bg); border-radius: 10px; border: 2px solid var(--border); margin-bottom: 10px; display: flex; flex-direction: column-reverse; padding: 8px; gap: 5px; position: relative; z-index: 5; }
+        .stack-frame { border: 1px solid #cbd5e1; background: rgba(255,255,255,0.8); border-radius: 6px; padding: 6px; position: relative; }
+        .frame-label { position: absolute; top: -7px; right: 8px; font-size: 0.55rem; background: #94a3b8; color: white; padding: 1px 4px; border-radius: 3px; }
+
+        .stack-var { width: 110px; padding: 3px 8px; border-radius: 4px; background: #fff; border: 1px solid var(--border); display: flex; justify-content: space-between; font-size: 0.7rem; margin-top: 2px; }
+        .var-ref { border-left: 3px solid var(--secondary); }
+
+        .heap-area { flex: 1; background: var(--heap-bg); border-radius: 10px; border: 2px dashed var(--secondary); position: relative; overflow: hidden; }
+        
+        .heap-obj-list { position: absolute; background: #fff; border: 2px solid var(--secondary); border-radius: 8px; padding: 8px; min-width: 130px; top: 15px; left: 20px; z-index: 20; }
+        .list-slot-container { display: flex; flex-direction: column; gap: 3px; margin-top: 5px; }
+        .list-slot { border: 1px solid #ddd; padding: 3px; font-size: 0.65rem; background: #f9f9f9; border-radius: 4px; display: flex; justify-content: space-between; min-height: 1rem; }
+
+        .heap-obj-data { position: absolute; background: #fff; border: 2px solid var(--obj-color); border-radius: 8px; padding: 6px; min-width: 90px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); z-index: 20; }
+        .obj-title { font-size: 0.6rem; color: var(--text-sub); border-bottom: 1px solid var(--border); padding-bottom: 2px; margin-bottom: 3px; }
+        .obj-field { display: flex; justify-content: space-between; font-size: 0.75rem; }
+        .field-val { font-weight: bold; color: var(--obj-color); }
+
+        #connector-canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 10; }
+
+        .console-container { width: 100%; max-width: 1200px; margin-top: 10px; background: var(--console-bg); border-radius: 8px; padding: 10px; color: #fff; font-family: 'Consolas', monospace; font-size: 0.85rem; }
+        .commentary { margin-top: 8px; font-size: 0.95rem; font-weight: 500; background: #fff; padding: 6px 20px; border-radius: 30px; border: 1px solid var(--border); text-align: center; max-width: 900px;}
+        
+        .btn-group { display: flex; gap: 10px; margin-top: 8px; }
+        button { padding: 8px 20px; border-radius: 8px; border: none; background: var(--text-main); color: #fff; font-weight: 600; cursor: pointer; }
+        .btn-reset { background: #fff; color: var(--text-main); border: 1px solid var(--border); }
+        button:disabled { background: var(--border); color: var(--text-sub); }
+
+        .update-flash { animation: flash 0.8s; }
+        @keyframes flash { 0% { background-color: var(--obj-color); color: white; } 100% { background-color: white; color: inherit; } }
+        .frame-exit { opacity: 0; filter: blur(5px); transition: 0.4s; }
+    </style>
+</head>
+<body>
+
+    <h2 style="margin: 0 0 10px 0;">Java Memory: List of Multiple Objects</h2>
+
+    <div class="container">
+        <div class="code-panel">
+<div class="line" id="l1">List&lt;Data&gt; list = new ArrayList&lt;&gt;();</div>
+<div class="line" id="l2">Data d1 = new Data(10);</div>
+<div class="line" id="l3">Data d2 = new Data(20);</div>
+<div class="line" id="l4">list.add(d1);</div>
+<div class="line" id="l5">list.add(d2);</div>
+<div class="line" id="l6">update(list);</div>
+<div class="line" id="l7">System.out.println(list.get(0).val);</div>
+<div style="margin: 5px 0; height: 1px; background: #444; opacity: 0.3;"></div>
+<div class="line" id="l8">void update(List&lt;Data&gt; myList) {</div>
+<div class="line" id="l9">  myList.get(0).val = 50;</div>
+<div class="line" id="l10">}</div>
+        </div>
+
+        <div class="memory-panel" id="memory-root">
+            <svg id="connector-canvas"></svg>
+            <div class="memory-header">Stack</div>
+            <div class="stack-area" id="stack-area"></div>
+            <div class="memory-header">Heap (List & Data Objects)</div>
+            <div class="heap-area" id="heap-area"></div>
+        </div>
+    </div>
+
+    <div class="console-container"><div id="console-out">> console waiting...</div></div>
+    <div class="commentary" id="commentary">「次へ」で開始</div>
+    
+    <div class="btn-group">
+        <button id="nextBtn" onclick="nextStep()">次へ進む</button>
+        <button class="btn-reset" onclick="location.reload()">リセット</button>
+    </div>
+
+<script>
+    let step = -1;
+    // 矢印の情報を保持する配列
+    let activeArrows = [];
+
+    const flow = [
+        { line: 'l1', msg: "【定義】mainに list 変数(null)を用意します。", action: () => { createFrame('main'); pushVar('main', 'list', 'null', 'var-ref'); } },
+        { line: 'l1', msg: "【代入】ArrayListをヒープに作り、住所(0x11)を格納します。", action: () => { addListHeap('list-obj', '0x11'); updateVar('main', 'list', '0x11'); registerArrow('main-list', 'list-obj', '#10b981'); } },
+        
+        { line: 'l2', msg: "【定義】変数 d1(null) と Data実体(0xD1, val:10) を用意します。", action: () => { pushVar('main', 'd1', 'null', 'var-ref'); addDataHeap('data1', '0xD1', 10, 280, 20); } },
+        { line: 'l2', msg: "【代入】変数 d1 に住所(0xD1)を格納します。", action: () => { updateVar('main', 'd1', '0xD1'); registerArrow('main-d1', 'data1', '#f59e0b'); } },
+
+        { line: 'l3', msg: "【定義】変数 d2(null) と Data実体(0xD2, val:20) を用意します。", action: () => { pushVar('main', 'd2', 'null', 'var-ref'); addDataHeap('data2', '0xD2', 20, 280, 100); } },
+        { line: 'l3', msg: "【代入】変数 d2 に住所(0xD2)を格納します。", action: () => { updateVar('main', 'd2', '0xD2'); registerArrow('main-d2', 'data2', '#f59e0b'); } },
+
+        { line: 'l4', msg: "【代入】list.add(d1) : リストの[0]番目に d1 の住所(0xD1)をコピーします。", action: () => { addListSlot('list-obj', '0xD1', 'data1'); } },
+        { line: 'l5', msg: "【代入】list.add(d2) : リストの[1]番目に d2 の住所(0xD2)をコピーします。", action: () => { addListSlot('list-obj', '0xD2', 'data2'); } },
+
+        { line: 'l6', msg: "update(list) を呼び出し、リストの住所(0x11)を渡します。", action: () => { } },
+
+        { line: 'l8', msg: "【定義】updateフレームが作られ、myList(null) が用意されます。", action: () => { createFrame('update'); pushVar('update', 'myList', 'null', 'var-ref'); } },
+        { line: 'l8', msg: "【代入】呼び出し元からリストの住所(0x11)をコピーします。", action: () => { updateVar('update', 'myList', '0x11'); registerArrow('update-myList', 'list-obj', '#10b981'); } },
+
+        { line: 'l9', msg: "myList(0x11) → [0]番目(0xD1) → Data実体 と辿り、valを50に変えます。", action: () => { updateDataField('data1', '50'); } },
+
+        { line: 'l10', msg: "メソッド終了。スタックフレームが破棄されます。", action: () => { removeFrame('update'); } },
+
+        { line: 'l7', msg: "println：mainの list から同じ Data(0xD1) を辿り、値 50 を出力します。", action: () => { document.getElementById('console-out').innerText = "> 50"; } }
+    ];
+
+    function highlightLine(id) { document.querySelectorAll('.line').forEach(l => l.classList.remove('active')); document.getElementById(id).classList.add('active'); }
+    
+    function createFrame(name) { 
+        const div = document.createElement('div'); div.id = `frame-${name}`; div.className = 'stack-frame';
+        div.innerHTML = `<div class="frame-label">${name}()</div><div id="vars-${name}"></div>`;
+        document.getElementById('stack-area').appendChild(div);
+        refreshAllArrows(); // レイアウトが変わるので再描画
+    }
+
+    function removeFrame(name) { 
+        const frame = document.getElementById(`frame-${name}`); 
+        if(frame) frame.classList.add('frame-exit'); 
+        activeArrows = activeArrows.filter(a => !a.from.includes(name));
+        setTimeout(() => { frame.remove(); refreshAllArrows(); }, 400);
+    }
+
+    function pushVar(frameName, varName, val, className) { 
+        const container = document.getElementById(`vars-${frameName}`);
+        const div = document.createElement('div'); div.id = `var-${frameName}-${varName}`; div.className = `stack-var ${className}`;
+        div.innerHTML = `<span>${varName}</span><strong>${val}</strong>`;
+        container.appendChild(div);
+        setTimeout(refreshAllArrows, 50); // DOM反映後に再描画
+    }
+
+    function updateVar(frameName, varName, newVal) { 
+        const el = document.getElementById(`var-${frameName}-${varName}`);
+        if(el) { el.querySelector('strong').innerText = newVal; el.classList.add('update-flash'); setTimeout(() => el.classList.remove('update-flash'), 800); }
+    }
+
+    function addListHeap(id, addr) { 
+        const div = document.createElement('div'); div.id = id; div.className = 'heap-obj-list';
+        div.innerHTML = `<div class="obj-title">ArrayList (0x11)</div><div class="list-slot-container" id="${id}-slots"></div>`;
+        document.getElementById('heap-area').appendChild(div);
+    }
+
+    function addDataHeap(id, addr, val, x, y) { 
+        const div = document.createElement('div'); div.id = id; div.className = 'heap-obj-data'; div.style.left = x + 'px'; div.style.top = y + 'px';
+        div.innerHTML = `<div class="obj-title">Data (addr:${addr})</div><div class="obj-field"><span>val:</span><strong class="field-val">${val}</strong></div>`;
+        document.getElementById('heap-area').appendChild(div);
+    }
+
+    function updateDataField(id, newVal) { const el = document.getElementById(id); el.querySelector('.field-val').innerText = newVal; el.classList.add('update-flash'); setTimeout(() => el.classList.remove('update-flash'), 800); }
+
+    function addListSlot(listId, dataAddr, dataObjId) { 
+        const container = document.getElementById(`${listId}-slots`);
+        const slotId = `${listId}-slot-${container.children.length}`;
+        const div = document.createElement('div'); div.id = slotId; div.className = 'list-slot';
+        div.innerHTML = `<span>[${container.children.length}]</span><strong>${dataAddr}</strong>`;
+        container.appendChild(div);
+        registerArrow(slotId, dataObjId, '#f59e0b', true);
+    }
+
+    // 矢印を登録して描画
+    function registerArrow(fromId, toId, color, isHeapToHeap = false) {
+        const arrow = { from: fromId, to: toId, color: color, isHeap: isHeapToHeap };
+        activeArrows.push(arrow);
+        refreshAllArrows();
+    }
+
+    function refreshAllArrows() {
+        const svg = document.getElementById('connector-canvas');
+        svg.innerHTML = '';
+        const rootRect = document.getElementById('memory-root').getBoundingClientRect();
+
+        activeArrows.forEach(a => {
+            const fromEl = document.getElementById(a.isHeap ? a.from : `var-${a.from}`);
+            const toEl = document.getElementById(a.to);
+            if(!fromEl || !toEl) return;
+
+            const fRect = fromEl.getBoundingClientRect();
+            const tRect = toEl.getBoundingClientRect();
+
+            const x1 = fRect.right - rootRect.left;
+            const y1 = fRect.top + fRect.height/2 - rootRect.top;
+            const x2 = tRect.left - rootRect.left;
+            const y2 = tRect.top + tRect.height/2 - rootRect.top;
+
+            const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+            if (a.isHeap) {
+                path.setAttribute('d', `M ${x1} ${y1} L ${x2} ${y2}`);
+                path.setAttribute('stroke-dasharray', '4');
+            } else {
+                const cp1x = x1 + (x2 - x1) * 0.4;
+                path.setAttribute('d', `M ${x1} ${y1} C ${cp1x} ${y1}, ${cp1x} ${y2}, ${x2} ${y2}`);
+            }
+            path.setAttribute('stroke', a.color);
+            path.setAttribute('stroke-width', '2');
+            path.setAttribute('fill', 'none');
+            svg.appendChild(path);
+        });
+    }
+
+    function nextStep() {
+        if (step < flow.length - 1) {
+            step++;
+            const current = flow[step];
+            highlightLine(current.line);
+            document.getElementById('commentary').innerText = current.msg;
+            current.action();
+        } else {
+            document.getElementById('nextBtn').disabled = true;
+        }
+    }
+
+    // ウィンドウサイズ変更時にも矢印を直す
+    window.addEventListener('resize', refreshAllArrows);
+</script>
+</body>
+</html>

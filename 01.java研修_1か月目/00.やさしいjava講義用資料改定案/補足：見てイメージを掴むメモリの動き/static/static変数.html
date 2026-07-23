@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Java Memory - Static Variables (Main Class)</title>
+    <style>
+        :root {
+            --bg-body: #f1f5f9;
+            --bg-card: #ffffff;
+            --primary: #3b82f6;   /* Stack */
+            --secondary: #10b981; /* Heap */
+            --static-color: #f43f5e; /* Static Area (Rose) */
+            --accent: #f59e0b;
+            --text-main: #1e293b;
+            --text-sub: #64748b;
+            --border: #e2e8f0;
+            --console-bg: #1e293b;
+        }
+
+        body { font-family: 'Segoe UI', system-ui, sans-serif; background-color: var(--bg-body); color: var(--text-main); margin: 0; padding: 10px; display: flex; flex-direction: column; align-items: center; }
+
+        .container { display: flex; gap: 15px; width: 100%; max-width: 1200px; height: 68vh; min-height: 550px; }
+
+        /* 左側：コードパネル */
+        .code-panel { flex: 0.9; background: #282c34; color: #d1d5db; padding: 15px; border-radius: 12px; font-family: 'Cascadia Code', 'Consolas', monospace; font-size: 0.75rem; line-height: 1.4; overflow-y: auto; }
+        .line { padding: 2px 8px; border-radius: 4px; transition: 0.2s; opacity: 0.7; border-left: 4px solid transparent; white-space: pre; }
+        .line.active { opacity: 1; background: #3e4451; border-left-color: var(--static-color); color: #fff; }
+
+        /* 右側：メモリパネル */
+        .memory-panel { flex: 2; background: var(--bg-card); border-radius: 12px; border: 1px solid var(--border); position: relative; display: flex; flex-direction: column; padding: 15px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+        .memory-header { font-weight: bold; font-size: 0.65rem; color: var(--text-sub); text-transform: uppercase; margin-bottom: 3px; margin-top: 5px; }
+
+        /* 静的領域 (Static Area / Metaspace) */
+        .static-area { flex: 0 0 70px; background: #fff1f2; border: 2px solid #fecdd3; border-radius: 10px; padding: 8px; display: flex; gap: 15px; align-items: center; position: relative; margin-bottom: 10px; opacity: 0.3; transition: 0.5s; }
+        .static-class-label { font-size: 0.6rem; background: var(--static-color); color: white; padding: 1px 5px; border-radius: 3px; position: absolute; top: -8px; left: 10px; }
+        .static-var-box { background: white; border: 1px solid var(--static-color); padding: 4px 10px; border-radius: 5px; font-size: 0.75rem; display: flex; gap: 10px; }
+
+        /* スタック領域 */
+        .stack-area { flex: 0 0 130px; background: #f8fafc; border-radius: 10px; border: 2px solid var(--border); margin-bottom: 10px; display: flex; flex-direction: column-reverse; padding: 8px; gap: 5px; position: relative; z-index: 5; }
+        .stack-frame { border: 1px solid #cbd5e1; background: rgba(255,255,255,0.8); border-radius: 6px; padding: 6px; position: relative; }
+        .frame-label { position: absolute; top: -7px; right: 8px; font-size: 0.55rem; background: #94a3b8; color: white; padding: 1px 4px; border-radius: 3px; }
+        .stack-var { width: 110px; padding: 3px 8px; border-radius: 4px; background: #fff; border: 1px solid var(--border); display: flex; justify-content: space-between; font-size: 0.7rem; }
+
+        /* ヒープ領域 */
+        .heap-area { flex: 1; background: #f0fdf4; border-radius: 10px; border: 2px dashed #cbd5e1; position: relative; overflow: hidden; }
+        .heap-obj { position: absolute; background: #fff; border: 2px solid var(--secondary); border-radius: 8px; padding: 8px; min-width: 110px; z-index: 20; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .obj-title { font-size: 0.6rem; color: var(--text-sub); border-bottom: 1px solid #eee; padding-bottom: 2px; margin-bottom: 4px; }
+        .obj-field { display: flex; justify-content: space-between; font-size: 0.75rem; }
+
+        #connector-canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 10; }
+
+        /* コンソール */
+        .console-container { width: 100%; max-width: 1200px; margin-top: 10px; background: var(--console-bg); border-radius: 8px; padding: 10px; color: #fff; font-family: 'Consolas', monospace; font-size: 0.85rem; }
+        .commentary { margin-top: 8px; font-size: 0.95rem; font-weight: 500; background: #fff; padding: 6px 20px; border-radius: 30px; border: 1px solid var(--border); text-align: center; max-width: 900px;}
+        
+        .btn-group { display: flex; gap: 10px; margin-top: 8px; }
+        button { padding: 8px 20px; border-radius: 8px; border: none; background: var(--text-main); color: #fff; font-weight: 600; cursor: pointer; }
+        .btn-reset { background: #fff; color: var(--text-main); border: 1px solid var(--border); }
+        
+        .update-flash { animation: flash 0.8s; }
+        @keyframes flash { 0% { background-color: var(--static-color); color: white; } 100% { background-color: white; color: inherit; } }
+    </style>
+</head>
+<body>
+
+    <h2 style="margin: 0 0 10px 0;">Java Memory: Static Variables & Method Execution</h2>
+
+    <div class="container">
+        <div class="code-panel">
+<div class="line" id="l1">class Counter {</div>
+<div class="line" id="l2">  static int count = 0;</div>
+<div class="line" id="l3">  int value = 0;</div>
+<div class="line" id="l4">}</div>
+<div class="line" id="l5">public class Main {</div>
+<div class="line" id="l6">  public static void main(String[] args) {</div>
+<div class="line" id="l7">    Counter c1 = new Counter();</div>
+<div class="line" id="l8">    Counter c2 = new Counter();</div>
+<div class="line" id="l9">    Counter.count = 100;</div>
+<div class="line" id="l10">    c1.value = 50;</div>
+<div class="line" id="l11">    System.out.println(c2.count);</div>
+<div class="line" id="l12">  }</div>
+<div class="line" id="l13">}</div>
+        </div>
+
+        <div class="memory-panel" id="memory-root">
+            <svg id="connector-canvas"></svg>
+            
+            <div class="memory-header">Static Area (Class Meta Info)</div>
+            <div class="static-area" id="static-area">
+                <div class="static-class-label">Counter class</div>
+                <div class="static-var-box" id="static-count-box">
+                    <span>static count:</span><strong id="static-count-val">0</strong>
+                </div>
+            </div>
+
+            <div class="memory-header">Stack (LIFO Frames)</div>
+            <div class="stack-area" id="stack-area"></div>
+
+            <div class="memory-header">Heap (Object Instances)</div>
+            <div class="heap-area" id="heap-area"></div>
+        </div>
+    </div>
+
+    <div class="console-container"><div id="console-out">> console waiting...</div></div>
+    <div class="commentary" id="commentary">「次へ」で開始</div>
+    <div class="btn-group">
+        <button id="nextBtn" onclick="nextStep()">次へ進む</button>
+        <button class="btn-reset" onclick="location.reload()">リセット</button>
+    </div>
+
+<script>
+    let step = -1;
+    let activeArrows = [];
+
+    const flow = [
+        { line: 'l2', msg: "【クラスロード】Counterクラスが読み込まれ、静的領域に static変数 'count' が初期化されます。", action: () => { document.getElementById('static-area').style.opacity = 1; } },
+        
+        { line: 'l6', msg: "【main開始】mainメソッドのスタックフレームが生成されます。", action: () => { createFrame('main'); } },
+
+        { line: 'l7', msg: "【定義】変数 c1 (null) を用意します。", action: () => { pushVar('main', 'c1', 'null', 'var-ref'); } },
+        { line: 'l7', msg: "【代入】Heapにインスタンス作成。インスタンス変数 'value' だけが各箱に作られます。", action: () => { addHeapObj('c1-obj', '0x11', 0, 30, 30); updateVar('main', 'c1', '0x11'); registerArrow('main-c1', 'c1-obj', '#10b981'); } },
+
+        { line: 'l8', msg: "【定義】変数 c2 (null) を用意します。", action: () => { pushVar('main', 'c2', 'null', 'var-ref'); } },
+        { line: 'l8', msg: "【代入】別のインスタンス作成。こちらにも独自の 'value' があります。", action: () => { addHeapObj('c2-obj', '0x22', 0, 160, 30); updateVar('main', 'c2', '0x22'); registerArrow('main-c2', 'c2-obj', '#10b981'); } },
+
+        { line: 'l9', msg: "【更新】Counter.count = 100 : インスタンスではなくクラス自身の静的領域を書き換えます。", action: () => { updateStaticVar('100'); } },
+
+        { line: 'l10', msg: "【更新】c1.value = 50 : 住所 0x11(c1) の中にある個別の 'value' を書き換えます。", action: () => { updateHeapField('c1-obj', 50); } },
+
+        { line: 'l11', msg: "c2.count の参照。c2の中に実体はありませんが、自動的に静的領域を見に行きます。", action: () => { document.getElementById('static-count-box').classList.add('update-flash'); } },
+        { line: 'l11', msg: "結果：100。static変数はすべてのインスタンスで共有されていることがわかります。", action: () => { document.getElementById('console-out').innerText = "> 100"; } }
+    ];
+
+    function highlightLine(id) { document.querySelectorAll('.line').forEach(l => l.classList.remove('active')); const t = document.getElementById(id); if (t) t.classList.add('active'); }
+    
+    function createFrame(n) { const d = document.createElement('div'); d.id=`frame-${n}`; d.className='stack-frame'; d.innerHTML=`<div class="frame-label">${n}()</div><div id="vars-${n}"></div>`; document.getElementById('stack-area').appendChild(d); refresh(); }
+    
+    function pushVar(f, v, val, c) { const con = document.getElementById(`vars-${f}`); const d = document.createElement('div'); d.id=`var-${f}-${v}`; d.className=`stack-var ${c}`; d.innerHTML=`<span>${v}</span><strong>${val}</strong>`; con.appendChild(d); setTimeout(refresh, 50); }
+    
+    function updateVar(f, v, n) { const e = document.getElementById(`var-${f}-${v}`); if(e) { e.querySelector('strong').innerText=n; e.classList.add('update-flash'); setTimeout(()=>e.classList.remove('update-flash'), 800); } }
+
+    function updateStaticVar(n) { const e = document.getElementById('static-count-val'); e.innerText = n; document.getElementById('static-count-box').classList.add('update-flash'); setTimeout(() => document.getElementById('static-count-box').classList.remove('update-flash'), 800); }
+
+    function addHeapObj(id, addr, val, x, y) { 
+        const d = document.createElement('div'); d.id=id; d.className='heap-obj'; d.style.left=x+'px'; d.style.top=y+'px';
+        d.innerHTML=`<div class="obj-title">Instance (${addr})</div><div class="obj-field"><span>value:</span><strong class="field-val">${val}</strong></div>`;
+        document.getElementById('heap-area').appendChild(d);
+    }
+
+    function updateHeapField(id, n) { const e = document.getElementById(id); e.querySelector('.field-val').innerText = n; e.classList.add('update-flash'); setTimeout(() => e.classList.remove('update-flash'), 800); }
+
+    function registerArrow(f, t, c) { activeArrows.push({from:f, to:t, color:c}); refresh(); }
+    
+    function refresh() {
+        const svg = document.getElementById('connector-canvas'); svg.innerHTML = '';
+        const root = document.getElementById('memory-root').getBoundingClientRect();
+        activeArrows.forEach(a => {
+            const fEl = document.getElementById(`var-${a.from}`);
+            const tEl = document.getElementById(a.to);
+            if(!fEl || !tEl) return;
+            const fR = fEl.getBoundingClientRect(); const tR = tEl.getBoundingClientRect();
+            const x1 = fR.right - root.left; const y1 = fR.top + fR.height/2 - root.top;
+            const x2 = tR.left - root.left; const y2 = tR.top + tR.height/2 - root.top;
+            const p = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+            const cp = x1 + (x2-x1)*0.4; p.setAttribute('d', `M ${x1} ${y1} C ${cp} ${y1}, ${cp} ${y2}, ${x2} ${y2}`);
+            p.setAttribute('stroke', a.color); p.setAttribute('stroke-width', '2'); p.setAttribute('fill', 'none'); svg.appendChild(p);
+        });
+    }
+
+    function nextStep() {
+        if (step < flow.length - 1) { step++; const c = flow[step]; highlightLine(c.line); document.getElementById('commentary').innerText = c.msg; c.action(); }
+        else { document.getElementById('nextBtn').disabled = true; }
+    }
+    window.addEventListener('resize', refresh);
+</script>
+</body>
+</html>

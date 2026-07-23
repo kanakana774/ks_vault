@@ -1,0 +1,59 @@
+{
+	"info": {
+		"_postman_id": "db9399ab-a1aa-4c01-8709-c0ad4597dd04",
+		"name": "todoAPI_todo課題2_一覧get_ソート順確認",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "46456941"
+	},
+	"item": [
+		{
+			"name": "一覧取得_正常系_ソート順確認",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"ステータスコードは200\", () => {\r",
+							"  pm.response.to.have.status(200);\r",
+							"});\r",
+							"\r",
+							"pm.test(\"レスポンスボディに正しいIDが含まれる\", () => {\r",
+							"  const jsonData = pm.response.json();\r",
+							"  pm.expect(jsonData[0].todoId).to.eql(3);\r",
+							"  pm.expect(jsonData[1].todoId).to.eql(4);\r",
+							"});"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:8080/todos?title=eT&limit=2",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"todos"
+					],
+					"query": [
+						{
+							"key": "title",
+							"value": "eT"
+						},
+						{
+							"key": "limit",
+							"value": "2"
+						}
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}

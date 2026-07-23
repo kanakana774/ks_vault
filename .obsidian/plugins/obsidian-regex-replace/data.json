@@ -1,0 +1,10 @@
+{
+  "findText": "[問題]",
+  "replaceText": "問題:",
+  "useRegEx": false,
+  "selOnly": false,
+  "caseInsensitive": false,
+  "processLineBreak": false,
+  "processTab": false,
+  "prefillFind": false
+}

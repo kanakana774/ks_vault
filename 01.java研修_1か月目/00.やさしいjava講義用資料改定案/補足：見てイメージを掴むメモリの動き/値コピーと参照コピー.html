@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Java Memory - Primitive vs Reference</title>
+    <style>
+        :root {
+            --bg-body: #f1f5f9;
+            --bg-card: #ffffff;
+            --primary: #3b82f6;   /* Primitive (Blue) */
+            --secondary: #10b981; /* Reference (Green) */
+            --accent: #f59e0b;
+            --text-main: #1e293b;
+            --text-sub: #64748b;
+            --border: #e2e8f0;
+            --stack-bg: #f8fafc;
+            --heap-bg: #f0fdf4;
+            --console-bg: #1e293b;
+        }
+
+        body { font-family: 'Segoe UI', system-ui, sans-serif; background-color: var(--bg-body); color: var(--text-main); margin: 0; padding: 10px; display: flex; flex-direction: column; align-items: center; }
+
+        .container { display: flex; gap: 20px; width: 100%; max-width: 1100px; height: 60vh; min-height: 500px; }
+
+        /* 左側：コードパネル */
+        .code-panel { flex: 0.9; background: #282c34; color: #d1d5db; padding: 20px; border-radius: 12px; font-family: 'Cascadia Code', 'Consolas', monospace; font-size: 0.9rem; line-height: 1.5; overflow-y: auto; }
+        .line { padding: 2px 10px; border-radius: 4px; transition: 0.2s; opacity: 0.7; border-left: 4px solid transparent; white-space: pre; }
+        .line.active { opacity: 1; background: #3e4451; border-left-color: var(--accent); color: #fff; }
+
+        /* 右側：メモリパネル */
+        .memory-panel { flex: 1.4; background: var(--bg-card); border-radius: 12px; border: 1px solid var(--border); position: relative; display: flex; flex-direction: column; padding: 15px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+        .memory-header { font-weight: bold; font-size: 0.75rem; color: var(--text-sub); text-transform: uppercase; margin-bottom: 5px; }
+
+        .stack-area { flex: 0 0 240px; background: var(--stack-bg); border-radius: 10px; border: 2px solid var(--border); margin-bottom: 15px; display: flex; flex-direction: column-reverse; padding: 10px; gap: 8px; position: relative; z-index: 5; }
+        .stack-frame { border: 1px solid #cbd5e1; background: rgba(255,255,255,0.8); border-radius: 6px; padding: 8px; position: relative; }
+        .frame-label { position: absolute; top: -7px; right: 8px; font-size: 0.6rem; background: #94a3b8; color: white; padding: 1px 5px; border-radius: 3px; }
+
+        .stack-var { width: 130px; padding: 4px 8px; border-radius: 5px; background: #fff; border: 1px solid var(--border); display: flex; justify-content: space-between; font-size: 0.75rem; margin-top: 4px; }
+        .var-primitive { border-left: 3px solid var(--primary); }
+        .var-reference { border-left: 3px solid var(--secondary); }
+
+        .heap-area { flex: 1; background: var(--heap-bg); border-radius: 10px; border: 2px dashed var(--secondary); position: relative; overflow: hidden; }
+        .heap-obj { position: absolute; background: #fff; border: 1px solid var(--secondary); border-radius: 8px; padding: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); min-width: 140px; top: 30px; left: 50%; transform: translateX(-50%); }
+        .obj-title { font-size: 0.65rem; color: var(--text-sub); border-bottom: 1px solid var(--border); padding-bottom: 3px; }
+        .array-display { display: flex; gap: 6px; margin-top: 8px; justify-content: center; }
+        .cell { width: 35px; height: 35px; border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; font-weight: bold; background: #fff; border-radius: 4px; }
+
+        #connector-canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 10; }
+
+        .console-container { width: 100%; max-width: 1100px; margin-top: 15px; background: var(--console-bg); border-radius: 8px; padding: 12px; color: #fff; font-family: 'Consolas', monospace; font-size: 0.9rem; }
+        .console-title { font-size: 0.7rem; color: #94a3b8; margin-bottom: 5px; border-bottom: 1px solid #475569; padding-bottom: 3px; }
+        .console-line { color: #10b981; min-height: 1.2em; }
+
+        .footer { margin-top: 15px; display: flex; flex-direction: column; align-items: center; gap: 10px; }
+        .commentary { font-size: 1rem; font-weight: 500; background: #fff; padding: 8px 25px; border-radius: 30px; border: 1px solid var(--border); min-height: 1.5em; text-align: center; max-width: 850px;}
+        .btn-group { display: flex; gap: 10px; }
+        button { padding: 10px 24px; border-radius: 8px; border: none; background: var(--text-main); color: #fff; font-weight: 600; cursor: pointer; }
+        .btn-reset { background: #fff; color: var(--text-main); border: 1px solid var(--border); }
+        button:disabled { background: var(--border); color: var(--text-sub); }
+
+        .update-flash { animation: flash 0.8s; }
+        @keyframes flash { 0% { background-color: var(--accent); color: white; } 100% { background-color: white; color: inherit; } }
+    </style>
+</head>
+<body>
+
+    <h2 style="margin: 0 0 15px 0;">Java Memory: Primitive Copy vs Reference Copy</h2>
+
+    <div class="container">
+        <div class="code-panel">
+            <div class="line" id="l1">int a = 10;</div>
+            <div class="line" id="l2">int b = a;</div>
+            <div class="line" id="l3">b = 20;</div>
+            <div style="margin: 10px 0; height: 1px; background: #444; opacity: 0.3;"></div>
+            <div class="line" id="l4">int[] arr1 = {1, 2};</div>
+            <div class="line" id="l5">int[] arr2 = arr1;</div>
+            <div class="line" id="l6">arr2[0] = 9;</div>
+            <div style="margin: 10px 0; height: 1px; background: #444; opacity: 0.3;"></div>
+            <div class="line" id="l7">System.out.println("a=" + a + ", b=" + b);</div>
+            <div class="line" id="l8">System.out.println("arr1[0]=" + arr1[0]);</div>
+        </div>
+
+        <div class="memory-panel" id="memory-root">
+            <svg id="connector-canvas"></svg>
+            <div class="memory-header">Stack (Primes & References)</div>
+            <div class="stack-area" id="stack-area"></div>
+            <div class="memory-header">Heap (Object Instances)</div>
+            <div class="heap-area" id="heap-area"></div>
+        </div>
+    </div>
+
+    <div class="console-container">
+        <div class="console-title">Console Output</div>
+        <div class="console-line" id="console-out"></div>
+    </div>
+
+    <div class="footer">
+        <div class="commentary" id="commentary">「次へ進む」で開始します</div>
+        <div class="btn-group">
+            <button id="nextBtn" onclick="nextStep()">次へ進む</button>
+            <button class="btn-reset" onclick="location.reload()">リセット</button>
+        </div>
+    </div>
+
+<script>
+    let step = -1;
+    let activeArrows = [];
+
+    const flow = [
+        { line: 'l1', msg: "【定義】スタックに基本型変数 'a' の箱を用意します。", action: () => { createFrame('main'); pushVar('main', 'a', '?', 'var-primitive'); } },
+        { line: 'l1', msg: "【代入】変数 'a' に値 10 を直接書き込みます。", action: () => updateVar('main', 'a', '10') },
+        
+        { line: 'l2', msg: "【定義】スタックに基本型変数 'b' の箱を用意します。", action: () => pushVar('main', 'b', '?', 'var-primitive') },
+        { line: 'l2', msg: "【代入】'a' の中身(10)を複製して 'b' に格納します（値のコピー）。", action: () => updateVar('main', 'b', '10') },
+
+        { line: 'l3', msg: "【更新】'b' を 20 に書き換えます。'a' とは別の箱なので 'a' は変わりません。", action: () => updateVar('main', 'b', '20') },
+
+        { line: 'l4', msg: "【定義】参照型変数 'arr1' (null) を用意します。", action: () => pushVar('main', 'arr1', 'null', 'var-reference') },
+        { line: 'l4', msg: "【代入】ヒープに配列実体を作り、住所(0x100)を格納します。", action: () => { addHeapArray('arr-obj', [1, 2]); updateVar('main', 'arr1', '0x100'); registerArrow('main-arr1', 'arr-obj', '#10b981'); } },
+
+        { line: 'l5', msg: "【定義】参照型変数 'arr2' (null) を用意します。", action: () => pushVar('main', 'arr2', 'null', 'var-reference') },
+        { line: 'l5', msg: "【代入】'arr1' の中身(住所:0x100)をコピーします（参照のコピー）。", action: () => { updateVar('main', 'arr2', '0x100'); registerArrow('main-arr2', 'arr-obj', '#10b981'); } },
+
+        { line: 'l6', msg: "【更新】arr2経由でヒープの値を 9 に変更。同じ実体を指す arr1 にも影響します。", action: () => updateHeapArray('arr-obj', 0, 9) },
+
+        { line: 'l7', msg: "println出力：基本型はそれぞれ独立していることが確認できます。", action: () => { document.getElementById('console-out').innerHTML += "> a=10, b=20<br>"; } },
+        { line: 'l8', msg: "println出力：参照型は同じ実体を操作した結果、arr1[0]も 9 になっています。", action: () => { document.getElementById('console-out').innerHTML += "> arr1[0]=9"; } }
+    ];
+
+    function highlightLine(id) {
+        document.querySelectorAll('.line').forEach(l => l.classList.remove('active'));
+        document.getElementById(id).classList.add('active');
+    }
+
+    function createFrame(name) {
+        const div = document.createElement('div');
+        div.id = `frame-${name}`; div.className = 'stack-frame';
+        div.innerHTML = `<div class="frame-label">${name}() frame</div><div id="vars-${name}"></div>`;
+        document.getElementById('stack-area').appendChild(div);
+        refreshArrows();
+    }
+
+    function pushVar(frameName, varName, val, className) {
+        const container = document.getElementById(`vars-${frameName}`);
+        const div = document.createElement('div');
+        div.id = `var-${frameName}-${varName}`; div.className = `stack-var ${className}`;
+        div.innerHTML = `<span>${varName}</span><strong>${val}</strong>`;
+        container.appendChild(div);
+        setTimeout(refreshArrows, 50);
+    }
+
+    function updateVar(frameName, varName, newVal) {
+        const el = document.getElementById(`var-${frameName}-${varName}`);
+        if(!el) return;
+        el.querySelector('strong').innerText = newVal;
+        el.classList.add('update-flash');
+        setTimeout(() => el.classList.remove('update-flash'), 800);
+    }
+
+    function addHeapArray(id, values) {
+        const div = document.createElement('div');
+        div.id = id; div.className = 'heap-obj';
+        div.innerHTML = `<div class="obj-title">int[] Array (addr:0x100)</div><div class="array-display" id="${id}-cells">
+            ${values.map(v => `<div class="cell">${v}</div>`).join('')}
+        </div>`;
+        document.getElementById('heap-area').appendChild(div);
+    }
+
+    function updateHeapArray(id, index, newVal) {
+        const cells = document.getElementById(`${id}-cells`).querySelectorAll('.cell');
+        cells[index].innerText = newVal;
+        cells[index].classList.add('update-flash');
+        setTimeout(() => cells[index].classList.remove('update-flash'), 800);
+    }
+
+    function registerArrow(fromVarId, toObjId, color) {
+        activeArrows.push({ from: fromVarId, to: toObjId, color: color });
+        refreshArrows();
+    }
+
+    function refreshArrows() {
+        const svg = document.getElementById('connector-canvas');
+        svg.innerHTML = '';
+        const rootRect = document.getElementById('memory-root').getBoundingClientRect();
+
+        activeArrows.forEach(arrow => {
+            const fromEl = document.getElementById(`var-${arrow.from}`);
+            const toEl = document.getElementById(arrow.to);
+            if(!fromEl || !toEl) return;
+
+            const fRect = fromEl.getBoundingClientRect();
+            const tRect = toEl.getBoundingClientRect();
+
+            const x1 = fRect.right - rootRect.left;
+            const y1 = fRect.top + fRect.height/2 - rootRect.top;
+            const x2 = tRect.left - rootRect.left;
+            const y2 = tRect.top + tRect.height/2 - rootRect.top;
+
+            const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+            const cp1x = x1 + (x2 - x1) * 0.4;
+            path.setAttribute('d', `M ${x1} ${y1} C ${cp1x} ${y1}, ${cp1x} ${y2}, ${x2} ${y2}`);
+            path.setAttribute('stroke', arrow.color);
+            path.setAttribute('stroke-width', '2.5');
+            path.setAttribute('fill', 'none');
+            svg.appendChild(path);
+        });
+    }
+
+    function nextStep() {
+        if (step < flow.length - 1) {
+            step++;
+            const current = flow[step];
+            highlightLine(current.line);
+            document.getElementById('commentary').innerText = current.msg;
+            current.action();
+        } else {
+            document.getElementById('nextBtn').disabled = true;
+        }
+    }
+
+    window.addEventListener('resize', refreshArrows);
+</script>
+</body>
+</html>

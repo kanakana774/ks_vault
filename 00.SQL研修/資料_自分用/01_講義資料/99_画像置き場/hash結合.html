@@ -1,0 +1,501 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ハッシュ結合アニメーション（修正・改善版）</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Noto+Sans+JP:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', 'Noto Sans JP', sans-serif;
+            background-color: #f0f4f8;
+            scroll-behavior: smooth;
+        }
+        .table-container {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 40px;
+            align-items: flex-start;
+        }
+        /* モバイル対応 */
+        @media (max-width: 768px) {
+            .table-container {
+                flex-direction: column;
+            }
+            .w-1\/3 {
+                width: 100% !important;
+            }
+        }
+
+        .data-table {
+            border-collapse: collapse;
+            width: 100%;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            background: white;
+        }
+        .data-table th, .data-table td {
+            border: 1px solid #e2e8f0;
+            padding: 8px 12px;
+            text-align: left;
+            font-size: 14px;
+            transition: background-color 0.3s, color 0.3s;
+        }
+        .data-table th {
+            background-color: #3b82f6;
+            color: white;
+            font-weight: 600;
+        }
+        /* ベースの背景色 */
+        .data-table tr:nth-child(even) td {
+            background-color: #f8fafc;
+        }
+        .data-table tr:nth-child(odd) td {
+            background-color: white;
+        }
+
+        /* --- ハイライト用CSS (修正版) --- */
+        
+        /* ビルド中（黄色） */
+        .highlight-build td, td.highlight-build {
+            background-color: #facc15 !important;
+            color: #1e293b !important;
+        }
+        
+        /* プローブ中（緑色） */
+        .highlight-probe td, td.highlight-probe {
+            background-color: #34d399 !important;
+            color: white !important;
+        }
+        
+        /* マッチ/結合成功（赤色） */
+        /* 重要: trにクラスがついた場合、配下のtdの色も強制的に変える */
+        tr.highlight-match td, td.highlight-match {
+            background-color: #ef4444 !important;
+            color: white !important;
+        }
+
+        /* ハッシュバケットのアニメーション */
+        .hash-bucket-active {
+            background-color: #facc15;
+            color: #1e293b;
+            border: 2px solid #ca8a04;
+        }
+        .hash-bucket-check {
+            background-color: #34d399;
+            color: white;
+            border: 2px solid #059669;
+        }
+
+        .hash-table {
+            background-color: #1e293b;
+            color: white;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            max-height: 500px;
+            overflow-y: auto;
+            width: 100%;
+        }
+        .bucket-item {
+            display: flex;
+            flex-direction: column; /* 改善: 中身が増えても見やすく */
+            margin-bottom: 8px;
+            padding: 8px;
+            border: 1px solid #334155;
+            border-radius: 6px;
+            transition: all 0.3s;
+            background-color: #0f172a;
+        }
+        .bucket-header {
+            display: flex;
+            justify-content: space-between;
+            font-weight: bold;
+            color: #60a5fa;
+            margin-bottom: 4px;
+            font-size: 0.9em;
+        }
+        .bucket-content {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 4px;
+        }
+        .data-badge {
+            background-color: #475569;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-family: 'Fira Code', monospace;
+            font-size: 0.85em;
+            border: 1px solid #64748b;
+        }
+
+        .step-info {
+            background-color: #fff;
+            border-left: 5px solid #3b82f6;
+            padding: 15px;
+            border-radius: 0 8px 8px 0;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            margin-bottom: 20px;
+        }
+        
+        .calc-preview {
+            font-family: 'Fira Code', monospace;
+            background: #e2e8f0;
+            padding: 2px 6px;
+            border-radius: 4px;
+            color: #d97706;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body class="p-4 md:p-8">
+
+    <div class="container mx-auto max-w-6xl">
+        <header class="mb-8 text-center">
+            <h1 class="text-3xl font-bold text-gray-800">ハッシュ結合 (Hash Join) 可視化</h1>
+            <p class="text-gray-500 mt-2">SQLの内部動作を理解するためのビジュアライザー</p>
+        </header>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+            <div class="bg-slate-800 text-green-300 p-4 rounded-lg font-mono text-sm overflow-x-auto shadow-lg">
+                <div class="text-gray-400 mb-2 border-b border-gray-600 pb-1">TARGET SQL</div>
+                SELECT T1.ID, T1.名前, T2.オーダーID, T2.製品<br>
+                FROM <span class="text-yellow-300">Users T1</span> (Build)<br>
+                INNER JOIN <span class="text-green-400">Orders T2</span> (Probe)<br>
+                ON <span class="text-white font-bold">T1.ID = T2.user_id</span>;
+            </div>
+            <div class="flex flex-col justify-center gap-3">
+                <div id="statusBox" class="step-info text-gray-700 text-lg">
+                    開始するには「Next Step」または「自動再生」を押してください。
+                </div>
+                <div class="flex gap-3">
+                    <button id="startBtn" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg shadow transition transform active:scale-95">
+                        Next Step
+                    </button>
+                    <button id="autoBtn" class="flex-1 bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-4 rounded-lg shadow transition transform active:scale-95">
+                        ▶ 自動再生
+                    </button>
+                    <button id="resetBtn" class="bg-gray-200 hover:bg-gray-300 text-gray-700 font-bold py-3 px-6 rounded-lg shadow transition">
+                        リセット
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div class="table-container">
+            <!-- 1. ビルドテーブル -->
+            <div class="w-1/3">
+                <h2 class="text-lg font-bold mb-2 text-indigo-700 flex items-center">
+                    <span class="bg-indigo-100 text-indigo-700 px-2 py-1 rounded mr-2 text-xs">1</span>
+                    ビルド入力 (Users)
+                </h2>
+                <table id="buildTable" class="data-table">
+                    <thead><tr><th>ID (Key)</th><th>名前</th></tr></thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+
+            <!-- 2. ハッシュテーブル -->
+            <div class="w-1/3">
+                <h2 class="text-lg font-bold mb-2 text-slate-700 flex items-center">
+                    <span class="bg-slate-200 text-slate-700 px-2 py-1 rounded mr-2 text-xs">2</span>
+                    メモリ内ハッシュテーブル
+                </h2>
+                <div id="hashTable" class="hash-table">
+                    <!-- JSで生成 -->
+                </div>
+            </div>
+
+            <!-- 3. プローブテーブル -->
+            <div class="w-1/3">
+                <h2 class="text-lg font-bold mb-2 text-green-700 flex items-center">
+                    <span class="bg-green-100 text-green-700 px-2 py-1 rounded mr-2 text-xs">3</span>
+                    プローブ入力 (Orders)
+                </h2>
+                <table id="probeTable" class="data-table">
+                    <thead><tr><th>OID</th><th>UID (Key)</th><th>製品</th></tr></thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- 4. 結果テーブル -->
+        <div class="mt-8 border-t-2 border-gray-200 pt-8" id="resultSection">
+            <h2 class="text-xl font-bold mb-3 text-red-700 flex items-center justify-center">
+                <span class="mr-2">🔗</span> 結合結果 (Result Set)
+            </h2>
+            <table id="resultTable" class="data-table">
+                <thead>
+                    <tr><th>ユーザーID</th><th>名前</th><th>オーダーID</th><th>製品</th></tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+            <p id="emptyResultMsg" class="text-center text-gray-400 py-4">まだ結合結果はありません</p>
+        </div>
+    </div>
+
+    <script type="text/javascript">
+        // --- データ定義 ---
+        const buildData = [
+            { id: 101, name: '佐藤' },
+            { id: 105, name: '田中' },
+            { id: 102, name: '山田' },
+            { id: 107, name: '中村' },
+        ]; 
+
+        const probeData = [
+            { order_id: 5001, user_id: 102, product: 'キーボード' },
+            { order_id: 5002, user_id: 105, product: 'マウス' },
+            { order_id: 5003, user_id: 108, product: 'モニター' }, // マッチしない
+            { order_id: 5004, user_id: 101, product: 'ヘッドセット' },
+            { order_id: 5005, user_id: 105, product: 'Webカメラ' },
+        ];
+
+        const HASH_SIZE = 5;
+
+        // --- 状態管理 ---
+        let currentPhase = 'INIT'; 
+        let buildIndex = 0;
+        let probeIndex = 0;
+        let hash_table = {}; 
+        let previousHighlightElements = []; 
+        let autoPlayInterval = null;
+
+        // --- UI要素 ---
+        const startBtn = document.getElementById('startBtn');
+        const autoBtn = document.getElementById('autoBtn');
+        const resetBtn = document.getElementById('resetBtn');
+        const statusBox = document.getElementById('statusBox');
+        const emptyResultMsg = document.getElementById('emptyResultMsg');
+
+        // --- 初期化関数 ---
+        const initTables = () => {
+            // ビルドテーブル
+            const buildTbody = document.getElementById('buildTable').querySelector('tbody');
+            buildTbody.innerHTML = buildData.map((row, i) => `
+                <tr id="build-row-${i}">
+                    <td class="font-mono font-bold">${row.id}</td>
+                    <td>${row.name}</td>
+                </tr>
+            `).join('');
+
+            // プローブテーブル
+            const probeTbody = document.getElementById('probeTable').querySelector('tbody');
+            probeTbody.innerHTML = probeData.map((row, i) => `
+                <tr id="probe-row-${i}">
+                    <td class="text-xs">${row.order_id}</td>
+                    <td class="font-mono font-bold">${row.user_id}</td>
+                    <td>${row.product}</td>
+                </tr>
+            `).join('');
+
+            // ハッシュテーブル（空のバケットを作成）
+            renderHashTable();
+        };
+
+        const renderHashTable = () => {
+            const container = document.getElementById('hashTable');
+            container.innerHTML = '';
+            
+            for (let i = 0; i < HASH_SIZE; i++) {
+                const items = hash_table[i] || [];
+                
+                const bucketHtml = `
+                    <div id="bucket-${i}" class="bucket-item">
+                        <div class="bucket-header">
+                            <span>Bucket ${i}</span>
+                            <span class="text-xs text-gray-500">Key % ${HASH_SIZE} = ${i}</span>
+                        </div>
+                        <div class="bucket-content">
+                            ${items.length > 0 
+                                ? items.map(item => `<span class="data-badge">${item.id}:${item.name}</span>`).join('') 
+                                : '<span class="text-gray-600 text-xs italic">Empty</span>'}
+                        </div>
+                    </div>
+                `;
+                container.innerHTML += bucketHtml;
+            }
+        };
+
+        // --- ヘルパー関数 ---
+        const simpleHash = (id) => id % HASH_SIZE;
+
+        const clearHighlights = () => {
+            previousHighlightElements.forEach(el => {
+                if (el) {
+                    el.classList.remove('highlight-build', 'highlight-probe', 'hash-bucket-active', 'hash-bucket-check');
+                }
+            });
+            previousHighlightElements = [];
+        };
+
+        const addTempHighlight = (el, className) => {
+            if (!el) return;
+            el.classList.add(className);
+            previousHighlightElements.push(el);
+        };
+
+        const scrollToElement = (elementId) => {
+            const el = document.getElementById(elementId);
+            if (el) {
+                el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            }
+        };
+
+        const updateStatus = (text, colorClass = 'border-blue-500') => {
+            statusBox.innerHTML = text;
+            statusBox.className = `step-info text-gray-700 text-lg ${colorClass}`;
+        };
+
+        // --- コアロジック ---
+
+        const stepBuild = () => {
+            clearHighlights();
+            
+            if (buildIndex >= buildData.length) {
+                // ビルド完了 -> プローブへ移行
+                currentPhase = 'PROBE';
+                updateStatus("<strong>構築フェーズ完了！</strong><br>メモリ上にハッシュテーブルが作成されました。次はプローブテーブルをスキャンします。", "border-green-500");
+                return;
+            }
+
+            const row = buildData[buildIndex];
+            const hashVal = simpleHash(row.id);
+            
+            // 1. ビルド行ハイライト
+            const tr = document.getElementById(`build-row-${buildIndex}`);
+            addTempHighlight(tr, 'highlight-build');
+            scrollToElement(`build-row-${buildIndex}`);
+
+            // 2. データ格納
+            if (!hash_table[hashVal]) hash_table[hashVal] = [];
+            hash_table[hashVal].push(row);
+            renderHashTable();
+
+            // 3. バケットハイライト
+            const bucketEl = document.getElementById(`bucket-${hashVal}`);
+            addTempHighlight(bucketEl, 'hash-bucket-active');
+            scrollToElement(`bucket-${hashVal}`);
+
+            updateStatus(`
+                <span class="text-sm text-gray-500">Phase 1: Build (${buildIndex + 1}/${buildData.length})</span><br>
+                ID <span class="font-bold">${row.id}</span> を読み込み、ハッシュ値を計算。<br>
+                <span class="calc-preview">${row.id} % ${HASH_SIZE} = ${hashVal}</span> → バケット ${hashVal} に格納。
+            `, "border-yellow-400");
+
+            buildIndex++;
+        };
+
+        const stepProbe = () => {
+            clearHighlights();
+
+            if (probeIndex >= probeData.length) {
+                currentPhase = 'DONE';
+                updateStatus("<strong>全工程完了！</strong><br>すべての結合処理が終了しました。", "border-red-500");
+                startBtn.disabled = true;
+                startBtn.textContent = "完了";
+                autoBtn.disabled = true;
+                clearInterval(autoPlayInterval);
+                return;
+            }
+
+            const row = probeData[probeIndex];
+            const hashVal = simpleHash(row.user_id);
+            
+            // 1. プローブ行ハイライト
+            const tr = document.getElementById(`probe-row-${probeIndex}`);
+            addTempHighlight(tr, 'highlight-probe');
+            scrollToElement(`probe-row-${probeIndex}`);
+
+            // 2. バケット検索ハイライト
+            const bucketEl = document.getElementById(`bucket-${hashVal}`);
+            addTempHighlight(bucketEl, 'hash-bucket-check');
+            
+            const bucketItems = hash_table[hashVal] || [];
+            let matchItem = bucketItems.find(b => b.id === row.user_id);
+            
+            let msg = `
+                <span class="text-sm text-gray-500">Phase 2: Probe (${probeIndex + 1}/${probeData.length})</span><br>
+                オーダーのUID <span class="font-bold">${row.user_id}</span> のハッシュは <span class="calc-preview">${hashVal}</span>。<br>
+                バケット ${hashVal} を検索中...
+            `;
+
+            if (matchItem) {
+                msg += `<br><strong class="text-red-600">✨ ヒット！ ID ${matchItem.id} (${matchItem.name}) と結合します。</strong>`;
+                
+                // 結果追加
+                const resultTbody = document.getElementById('resultTable').querySelector('tbody');
+                const newRow = resultTbody.insertRow();
+                newRow.innerHTML = `
+                    <td>${matchItem.id}</td>
+                    <td>${matchItem.name}</td>
+                    <td>${row.order_id}</td>
+                    <td>${row.product}</td>
+                `;
+                // 重要: 結果行にクラスを追加（CSSで白文字白背景を防ぐ）
+                newRow.classList.add('highlight-match');
+                
+                emptyResultMsg.style.display = 'none';
+                scrollToElement('resultSection');
+            } else {
+                msg += `<br><span class="text-gray-500">不一致。このデータは除外されます。</span>`;
+            }
+
+            updateStatus(msg, "border-green-500");
+            probeIndex++;
+        };
+
+        const handleNext = () => {
+            if (currentPhase === 'INIT') currentPhase = 'BUILD';
+
+            if (currentPhase === 'BUILD') {
+                stepBuild();
+            } else if (currentPhase === 'PROBE') {
+                stepProbe();
+            }
+        };
+
+        const handleReset = () => {
+            clearInterval(autoPlayInterval);
+            currentPhase = 'INIT';
+            buildIndex = 0;
+            probeIndex = 0;
+            hash_table = {};
+            previousHighlightElements = [];
+            
+            document.getElementById('resultTable').querySelector('tbody').innerHTML = '';
+            emptyResultMsg.style.display = 'block';
+            startBtn.disabled = false;
+            startBtn.textContent = "Next Step";
+            autoBtn.disabled = false;
+            
+            updateStatus("リセットしました。");
+            initTables();
+        };
+
+        const handleAutoPlay = () => {
+            if (autoPlayInterval) return; // 既に再生中
+            handleNext(); // 即時1回実行
+            autoPlayInterval = setInterval(() => {
+                if (currentPhase === 'DONE') {
+                    clearInterval(autoPlayInterval);
+                } else {
+                    handleNext();
+                }
+            }, 1500); // 1.5秒ごとに実行
+        };
+
+        // --- イベントリスナー ---
+        startBtn.addEventListener('click', () => {
+            clearInterval(autoPlayInterval); // 手動操作したらオート止める
+            handleNext();
+        });
+        autoBtn.addEventListener('click', handleAutoPlay);
+        resetBtn.addEventListener('click', handleReset);
+
+        // 開始
+        initTables();
+
+    </script>
+</body>
+</html>

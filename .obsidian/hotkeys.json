@@ -1,0 +1,36 @@
+{
+  "window:zoom-in": [
+    {
+      "modifiers": [
+        "Mod"
+      ],
+      "key": "="
+    }
+  ],
+  "window:zoom-out": [
+    {
+      "modifiers": [
+        "Mod"
+      ],
+      "key": "-"
+    }
+  ],
+  "editor:toggle-highlight": [
+    {
+      "modifiers": [
+        "Alt",
+        "Mod"
+      ],
+      "key": "H"
+    }
+  ],
+  "insert-current-date": [
+    {
+      "modifiers": [
+        "Alt",
+        "Mod"
+      ],
+      "key": "="
+    }
+  ]
+}

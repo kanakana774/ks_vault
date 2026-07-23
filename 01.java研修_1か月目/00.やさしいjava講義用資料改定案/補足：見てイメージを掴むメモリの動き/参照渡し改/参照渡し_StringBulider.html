@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Java Memory - StringBuilder Mutability (Main Method)</title>
+    <style>
+        :root {
+            --bg-body: #f1f5f9;
+            --bg-card: #ffffff;
+            --stack-color: #3b82f6;
+            --heap-color: #10b981;
+            --sb-color: #f97316; /* StringBuilderはオレンジ */
+            --accent: #f59e0b;
+            --text-main: #1e293b;
+            --text-sub: #64748b;
+            --border: #e2e8f0;
+            --stack-bg: #f8fafc;
+            --heap-bg: #fff7ed;
+            --console-bg: #1e293b;
+        }
+
+        body { font-family: 'Segoe UI', system-ui, sans-serif; background-color: var(--bg-body); color: var(--text-main); margin: 0; padding: 10px; display: flex; flex-direction: column; align-items: center; }
+
+        .container { display: flex; gap: 15px; width: 100%; max-width: 1200px; height: 62vh; min-height: 520px; }
+
+        .code-panel { flex: 0.9; background: #282c34; color: #d1d5db; padding: 15px; border-radius: 12px; font-family: 'Cascadia Code', 'Consolas', monospace; font-size: 0.78rem; line-height: 1.4; overflow-y: auto; }
+        .line { padding: 1px 8px; border-radius: 4px; transition: 0.2s; opacity: 0.7; border-left: 4px solid transparent; white-space: pre; }
+        .line.active { opacity: 1; background: #3e4451; border-left-color: var(--sb-color); color: #fff; }
+
+        .memory-panel { flex: 1.6; background: var(--bg-card); border-radius: 12px; border: 1px solid var(--border); position: relative; display: flex; flex-direction: column; padding: 15px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+        .memory-header { font-weight: bold; font-size: 0.65rem; color: var(--text-sub); text-transform: uppercase; margin-bottom: 5px; }
+
+        .stack-area { flex: 0 0 160px; background: #f8fafc; border-radius: 10px; border: 2px solid var(--border); margin-bottom: 10px; display: flex; flex-direction: column-reverse; padding: 8px; gap: 5px; position: relative; z-index: 5; }
+        .stack-frame { border: 1px solid #cbd5e1; background: rgba(255,255,255,0.8); border-radius: 6px; padding: 6px; position: relative; }
+        .frame-label { position: absolute; top: -7px; right: 8px; font-size: 0.55rem; background: #94a3b8; color: white; padding: 1px 4px; border-radius: 3px; }
+
+        .stack-var { width: 120px; padding: 3px 8px; border-radius: 4px; background: #fff; border: 1px solid var(--border); display: flex; justify-content: space-between; font-size: 0.7rem; margin-top: 2px; }
+        .var-ref { border-left: 3px solid var(--sb-color); }
+
+        .heap-area { flex: 1; background: #fff7ed; border-radius: 10px; border: 2px dashed var(--sb-color); position: relative; overflow: hidden; }
+        .heap-obj { position: absolute; background: #fff; border: 2px solid var(--sb-color); border-radius: 12px; padding: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); min-width: 160px; top: 40px; left: 50%; transform: translateX(-50%); }
+        .obj-title { font-size: 0.65rem; color: var(--text-sub); border-bottom: 1px solid #eee; padding-bottom: 3px; margin-bottom: 8px; }
+        .sb-content { font-family: monospace; font-size: 1.2rem; font-weight: bold; color: var(--sb-color); text-align: center; background: #fffaf5; padding: 5px; border-radius: 4px; border: 1px inset #fed7aa; }
+
+        #connector-canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 10; }
+
+        .console-container { width: 100%; max-width: 1200px; margin-top: 10px; background: var(--console-bg); border-radius: 8px; padding: 10px; color: #fff; font-family: 'Consolas', monospace; font-size: 0.85rem; }
+        .commentary { margin-top: 8px; font-size: 0.95rem; font-weight: 500; background: #fff; padding: 6px 20px; border-radius: 30px; border: 1px solid var(--border); text-align: center; max-width: 900px;}
+        .btn-group { display: flex; gap: 10px; margin-top: 8px; }
+        button { padding: 8px 20px; border-radius: 8px; border: none; background: var(--text-main); color: #fff; font-weight: 600; cursor: pointer; }
+        
+        .update-flash { animation: flash 0.8s; }
+        @keyframes flash { 0% { background-color: var(--sb-color); color: white; } 100% { background-color: white; color: inherit; } }
+        .frame-exit { opacity: 0; filter: blur(5px); transform: scale(0.95); transition: 0.4s; }
+    </style>
+</head>
+<body>
+
+    <h2 style="margin: 0 0 10px 0;">Java Memory: StringBuilder Mutability in Method Call</h2>
+
+    <div class="container">
+        <div class="code-panel">
+<div class="line" id="l1">public class Main {</div>
+<div class="line" id="l2">  public static void main(String[] args) {</div>
+<div class="line" id="l3">    StringBuilder sb = new StringBuilder("Java");</div>
+<div class="line" id="l4">    update(sb);</div>
+<div class="line" id="l5">    System.out.println(sb);</div>
+<div class="line" id="l6">  }</div>
+<div style="margin: 5px 0; height: 1px; background: #444; opacity: 0.3;"></div>
+<div class="line" id="l7">  static void update(StringBuilder s) {</div>
+<div class="line" id="l8">    s.append(" Rocks");</div>
+<div class="line" id="l9">  }</div>
+<div class="line" id="l10">}</div>
+        </div>
+
+        <div class="memory-panel" id="memory-root">
+            <svg id="connector-canvas"></svg>
+            <div class="memory-header">Stack (Method Frames)</div>
+            <div class="stack-area" id="stack-area"></div>
+            <div class="memory-header">Heap (Shared Mutable Object)</div>
+            <div class="heap-area" id="heap-area"></div>
+        </div>
+    </div>
+
+    <div class="console-container"><div id="console-out">> waiting...</div></div>
+    <div class="commentary" id="commentary">「次へ進む」でプログラムを開始</div>
+    
+    <div class="btn-group">
+        <button id="nextBtn" onclick="nextStep()">次へ進む</button>
+        <button onclick="location.reload()" style="background:#fff; color:#333; border:1px solid #ccc; padding: 8px 20px; border-radius: 8px; cursor: pointer;">リセット</button>
+    </div>
+
+<script>
+    let step = -1;
+    let activeArrows = [];
+
+    const flow = [
+        { line: 'l2', msg: "プログラム開始。mainメソッドのスタックフレームが生成されます。", action: () => { createFrame('main'); } },
+        
+        { line: 'l3', msg: "【定義】main内に StringBuilder型の変数 sb (null) を用意します。", action: () => { pushVar('main', 'sb', 'null', 'var-ref'); } },
+        { line: 'l3', msg: "【代入】ヒープに実体を作成。住所(0x88)を変数に格納し、実体と繋ぎます。", action: () => { addHeapSB('sb-obj', 'Java', '0x88'); updateVar('main', 'sb', '0x88'); registerArrow('main-sb', 'sb-obj', '#f97316'); } },
+        
+        { line: 'l4', msg: "update(sb) を呼び出し。住所(0x88)を引数としてコピーします。", action: () => { } },
+
+        { line: 'l7', msg: "【定義】updateフレームが作られ、引数 's' の箱が用意されます。", action: () => { createFrame('update'); pushVar('update', 's', 'null', 'var-ref'); } },
+        { line: 'l7', msg: "【代入】呼び出し元の住所(0x88)が 's' にコピーされます。同じ実体を指します。", action: () => { updateVar('update', 's', '0x88'); registerArrow('update-s', 'sb-obj', '#f97316'); } },
+
+        { line: 'l8', msg: "【更新】s.append(...) : Stringと違い、同じ住所の実体の中身を直接書き換えます。", action: () => updateHeapSB('sb-obj', 'Java Rocks') },
+
+        { line: 'l9', msg: "メソッド終了。updateフレームとコピーされた住所 's' は消滅します。", action: () => removeFrame('update') },
+
+        { line: 'l5', msg: "println：mainの sb が指す実体そのものが変わったため、Java Rocks が出力されます。", action: () => { document.getElementById('console-out').innerText = "> Java Rocks"; } }
+    ];
+
+    function highlightLine(id) { document.querySelectorAll('.line').forEach(l => l.classList.remove('active')); const t = document.getElementById(id); if (t) t.classList.add('active'); }
+    function createFrame(n) { const d = document.createElement('div'); d.id=`frame-${n}`; d.className='stack-frame'; d.innerHTML=`<div class="frame-label">${n}()</div><div id="vars-${n}"></div>`; document.getElementById('stack-area').appendChild(d); refreshArrows(); }
+    function pushVar(f, v, val, c) { const con = document.getElementById(`vars-${f}`); const d = document.createElement('div'); d.id=`var-${f}-${v}`; d.className=`stack-var ${c}`; d.innerHTML=`<span>${v}</span><strong>${val}</strong>`; con.appendChild(d); setTimeout(refreshArrows, 50); }
+    function updateVar(f, v, n) { const e = document.getElementById(`var-${f}-${v}`); if(e) { e.querySelector('strong').innerText=n; e.classList.add('update-flash'); setTimeout(()=>e.classList.remove('update-flash'), 800); } }
+    function removeFrame(n) { const f = document.getElementById(`frame-${n}`); if(f) f.classList.add('frame-exit'); activeArrows = activeArrows.filter(a => !a.from.includes(n)); setTimeout(() => { if(f) f.remove(); refreshArrows(); }, 400); }
+    
+    function addHeapSB(id, text, addr) {
+        const div = document.createElement('div');
+        div.id = id; div.className = 'heap-obj';
+        div.innerHTML = `<div class="obj-title">StringBuilder (addr:${addr})</div><div class="sb-content" id="${id}-text">${text}</div>`;
+        document.getElementById('heap-area').appendChild(div);
+    }
+
+    function updateHeapSB(id, newText) {
+        const el = document.getElementById(`${id}-text`);
+        el.innerText = newText;
+        el.parentElement.classList.add('update-flash');
+        setTimeout(() => el.parentElement.classList.remove('update-flash'), 800);
+    }
+
+    function registerArrow(fromVarId, toObjId, color) { activeArrows.push({ from: fromVarId, to: toObjId, color: color }); refreshArrows(); }
+
+    function refreshArrows() {
+        const svg = document.getElementById('connector-canvas');
+        svg.innerHTML = '';
+        const rootRect = document.getElementById('memory-root').getBoundingClientRect();
+        activeArrows.forEach(arrow => {
+            const fromEl = document.getElementById(`var-${arrow.from}`);
+            const toEl = document.getElementById(arrow.to);
+            if(!fromEl || !toEl) return;
+            const fRect = fromEl.getBoundingClientRect(); const tRect = toEl.getBoundingClientRect();
+            const x1 = fRect.right - rootRect.left; const y1 = fRect.top + fRect.height/2 - rootRect.top;
+            const x2 = tRect.left - rootRect.left; const y2 = tRect.top + tRect.height/2 - rootRect.top;
+            const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+            const cp1x = x1 + (x2 - x1) * 0.4;
+            path.setAttribute('d', `M ${x1} ${y1} C ${cp1x} ${y1}, ${cp1x} ${y2}, ${x2} ${y2}`);
+            path.setAttribute('stroke', arrow.color); path.setAttribute('stroke-width', '2.5'); path.setAttribute('fill', 'none');
+            svg.appendChild(path);
+        });
+    }
+
+    function nextStep() {
+        if (step < flow.length - 1) {
+            step++;
+            const current = flow[step];
+            highlightLine(current.line);
+            document.getElementById('commentary').innerText = current.msg;
+            current.action();
+        } else {
+            document.getElementById('nextBtn').disabled = true;
+        }
+    }
+    window.addEventListener('resize', refreshArrows);
+</script>
+</body>
+</html>

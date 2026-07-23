@@ -1,0 +1,970 @@
+{
+	"info": {
+		"_postman_id": "e0bd7d62-ede1-4568-9422-eebba7f27cb7",
+		"name": "todoAPI_todo課題2_GET",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "46456941"
+	},
+	"item": [
+		{
+			"name": "タグ作成1",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"ステータスコードは201\", () => {\r",
+							"  pm.response.to.have.status(201);\r",
+							"});\r",
+							"\r",
+							"const location = pm.response.headers.get(\"Location\");\r",
+							"\r",
+							"pm.test(\"Location ヘッダにID付きURLを含む\", () => {\r",
+							"  pm.expect(location).to.match(/\\/tags\\/\\d+$/);\r",
+							"});\r",
+							"\r",
+							"const idMatch = location.match(/\\/tags\\/(\\d+)$/);\r",
+							"if (idMatch) {\r",
+							"  pm.environment.set(\"created_tag_id1\", idMatch[1]);\r",
+							"}"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"name\":\"tag1\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:8080/tags",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"tags"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "タグ作成2",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"ステータスコードは201\", () => {\r",
+							"  pm.response.to.have.status(201);\r",
+							"});\r",
+							"\r",
+							"const location = pm.response.headers.get(\"Location\");\r",
+							"\r",
+							"pm.test(\"Location ヘッダにID付きURLを含む\", () => {\r",
+							"  pm.expect(location).to.match(/\\/tags\\/\\d+$/);\r",
+							"});\r",
+							"\r",
+							"const idMatch = location.match(/\\/tags\\/(\\d+)$/);\r",
+							"if (idMatch) {\r",
+							"  pm.environment.set(\"created_tag_id2\", idMatch[1]);\r",
+							"}"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"name\":\"tag2\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:8080/tags",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"tags"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "タグ作成3",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"ステータスコードは201\", () => {\r",
+							"  pm.response.to.have.status(201);\r",
+							"});\r",
+							"\r",
+							"const location = pm.response.headers.get(\"Location\");\r",
+							"\r",
+							"pm.test(\"Location ヘッダにID付きURLを含む\", () => {\r",
+							"  pm.expect(location).to.match(/\\/tags\\/\\d+$/);\r",
+							"});\r",
+							"\r",
+							"const idMatch = location.match(/\\/tags\\/(\\d+)$/);\r",
+							"if (idMatch) {\r",
+							"  pm.environment.set(\"created_tag_id3\", idMatch[1]);\r",
+							"}"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"name\":\"tag3\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:8080/tags",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"tags"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "タグ作成4",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"ステータスコードは201\", () => {\r",
+							"  pm.response.to.have.status(201);\r",
+							"});\r",
+							"\r",
+							"const location = pm.response.headers.get(\"Location\");\r",
+							"\r",
+							"pm.test(\"Location ヘッダにID付きURLを含む\", () => {\r",
+							"  pm.expect(location).to.match(/\\/tags\\/\\d+$/);\r",
+							"});\r",
+							"\r",
+							"const idMatch = location.match(/\\/tags\\/(\\d+)$/);\r",
+							"if (idMatch) {\r",
+							"  pm.environment.set(\"created_tag_id4\", idMatch[1]);\r",
+							"}"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"name\":\"tag4\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:8080/tags",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"tags"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "タグ作成5",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"ステータスコードは201\", () => {\r",
+							"  pm.response.to.have.status(201);\r",
+							"});\r",
+							"\r",
+							"const location = pm.response.headers.get(\"Location\");\r",
+							"\r",
+							"pm.test(\"Location ヘッダにID付きURLを含む\", () => {\r",
+							"  pm.expect(location).to.match(/\\/tags\\/\\d+$/);\r",
+							"});\r",
+							"\r",
+							"const idMatch = location.match(/\\/tags\\/(\\d+)$/);\r",
+							"if (idMatch) {\r",
+							"  pm.environment.set(\"created_tag_id5\", idMatch[1]);\r",
+							"}"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"name\":\"tag5\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:8080/tags",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"tags"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "タグ作成6",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"ステータスコードは201\", () => {\r",
+							"  pm.response.to.have.status(201);\r",
+							"});\r",
+							"\r",
+							"const location = pm.response.headers.get(\"Location\");\r",
+							"\r",
+							"pm.test(\"Location ヘッダにID付きURLを含む\", () => {\r",
+							"  pm.expect(location).to.match(/\\/tags\\/\\d+$/);\r",
+							"});\r",
+							"\r",
+							"const idMatch = location.match(/\\/tags\\/(\\d+)$/);\r",
+							"if (idMatch) {\r",
+							"  pm.environment.set(\"created_tag_id6\", idMatch[1]);\r",
+							"}"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"name\":\"tag6\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:8080/tags",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"tags"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "一覧取得_データ作成1",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"ステータスコードは201\", () => {\r",
+							"  pm.response.to.have.status(201);\r",
+							"});\r",
+							"\r",
+							"const location = pm.response.headers.get(\"Location\");\r",
+							"\r",
+							"pm.test(\"Location ヘッダにID付きURLを含む\", () => {\r",
+							"  pm.expect(location).to.match(/\\/todos\\/\\d+$/);\r",
+							"});\r",
+							"\r",
+							"const idMatch = location.match(/\\/todos\\/(\\d+)$/);\r",
+							"if (idMatch) {\r",
+							"  pm.environment.set(\"created_todo_id1\", idMatch[1]);\r",
+							"}"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n  \"title\": \"geT100\",\r\n  \"content\": \"content\",\r\n  \"tags\": [\r\n    1,2,3\r\n  ]\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:8080/todos",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"todos"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "一覧取得_データ作成2",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"ステータスコードは201\", () => {\r",
+							"  pm.response.to.have.status(201);\r",
+							"});\r",
+							"\r",
+							"const location = pm.response.headers.get(\"Location\");\r",
+							"\r",
+							"pm.test(\"Location ヘッダにID付きURLを含む\", () => {\r",
+							"  pm.expect(location).to.match(/\\/todos\\/\\d+$/);\r",
+							"});\r",
+							"\r",
+							"const idMatch = location.match(/\\/todos\\/(\\d+)$/);\r",
+							"if (idMatch) {\r",
+							"  pm.environment.set(\"created_todo_id2\", idMatch[1]);\r",
+							"}"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n  \"title\": \"gEt2\",\r\n  \"content\": \"content\",\r\n  \"tags\": [\r\n    1,2,3\r\n  ]\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:8080/todos",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"todos"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "一覧取得_データ作成3",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"ステータスコードは201\", () => {\r",
+							"  pm.response.to.have.status(201);\r",
+							"});\r",
+							"\r",
+							"const location = pm.response.headers.get(\"Location\");\r",
+							"\r",
+							"pm.test(\"Location ヘッダにID付きURLを含む\", () => {\r",
+							"  pm.expect(location).to.match(/\\/todos\\/\\d+$/);\r",
+							"});\r",
+							"\r",
+							"const idMatch = location.match(/\\/todos\\/(\\d+)$/);\r",
+							"if (idMatch) {\r",
+							"  pm.environment.set(\"created_todo_id3\", idMatch[1]);\r",
+							"}"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n  \"title\": \"Get0.30\",\r\n  \"content\": \"content\",\r\n  \"tags\": [\r\n    1,2,3\r\n  ]\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:8080/todos",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"todos"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "一覧取得_データ作成4",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"ステータスコードは201\", () => {\r",
+							"  pm.response.to.have.status(201);\r",
+							"});\r",
+							"\r",
+							"const location = pm.response.headers.get(\"Location\");\r",
+							"\r",
+							"pm.test(\"Location ヘッダにID付きURLを含む\", () => {\r",
+							"  pm.expect(location).to.match(/\\/todos\\/\\d+$/);\r",
+							"});\r",
+							"\r",
+							"const idMatch = location.match(/\\/todos\\/(\\d+)$/);\r",
+							"if (idMatch) {\r",
+							"  pm.environment.set(\"created_todo_id4\", idMatch[1]);\r",
+							"}"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n  \"title\": \"got4\",\r\n  \"content\": \"content\",\r\n  \"tags\": [\r\n  ]\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:8080/todos",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"todos"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "一件取得_正常系",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"ステータスコードは200\", () => {\r",
+							"  pm.response.to.have.status(200);\r",
+							"});\r",
+							"\r",
+							"pm.test(\"レスポンスボディに正しいIDが含まれる\", () => {\r",
+							"  const jsonData = pm.response.json();\r",
+							"  pm.expect(jsonData.todoId).to.eql(parseInt(pm.environment.get(\"created_todo_id1\")));\r",
+							"});"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:8080/todos/{{created_todo_id1}}",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"todos",
+						"{{created_todo_id1}}"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "一件取得_正常系_tagの紐づきがないtodo",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"ステータスコードは200\", () => {\r",
+							"  pm.response.to.have.status(200);\r",
+							"});\r",
+							"\r",
+							"pm.test(\"レスポンスボディに正しいIDが含まれる\", () => {\r",
+							"  const jsonData = pm.response.json();\r",
+							"  pm.expect(jsonData.todoId).to.eql(parseInt(pm.environment.get(\"created_todo_id4\")));\r",
+							"});\r",
+							"\r",
+							"pm.test(\"空のtagsが帰ってきている\", () => {\r",
+							"  const jsonData = pm.response.json();\r",
+							"  pm.expect(jsonData.tags).to.be.empty;\r",
+							"});\r",
+							""
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:8080/todos/{{created_todo_id4}}",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"todos",
+						"{{created_todo_id4}}"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "一件取得_異常系_404_存在しないtodoId",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"ステータスコードは404\", () => {\r",
+							"  pm.response.to.have.status(404);\r",
+							"});\r",
+							"pm.test(\"codeはnotFound.resource\", () => {\r",
+							"  const responseJson = pm.response.json();\r",
+							"  pm.expect(responseJson.code).to.eql('notFound.resource');\r",
+							"});"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:8080/todos/99999",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"todos",
+						"99999"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "一覧取得_正常系",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"ステータスコードは200\", () => {\r",
+							"  pm.response.to.have.status(200);\r",
+							"});\r",
+							"\r",
+							"pm.test(\"レスポンスボディに正しいIDが含まれる\", () => {\r",
+							"  const jsonData = pm.response.json();\r",
+							"  pm.expect(jsonData[0].todoId).to.eql(parseInt(pm.environment.get(\"created_todo_id1\")));\r",
+							"  pm.expect(jsonData[1].todoId).to.eql(parseInt(pm.environment.get(\"created_todo_id2\")));\r",
+							"});"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:8080/todos?title=eT&limit=2",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"todos"
+					],
+					"query": [
+						{
+							"key": "title",
+							"value": "eT"
+						},
+						{
+							"key": "limit",
+							"value": "2"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "一覧取得_正常系_title指定なし",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"ステータスコードは200\", () => {\r",
+							"  pm.response.to.have.status(200);\r",
+							"});\r",
+							"\r",
+							"pm.test(\"レスポンスボディに正しいIDが含まれる\", () => {\r",
+							"  const jsonData = pm.response.json();\r",
+							"  pm.expect(jsonData[0].todoId).to.eql(parseInt(pm.environment.get(\"created_todo_id1\")));\r",
+							"  pm.expect(jsonData[1].todoId).to.eql(parseInt(pm.environment.get(\"created_todo_id2\")));\r",
+							"});"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:8080/todos?limit=2",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"todos"
+					],
+					"query": [
+						{
+							"key": "limit",
+							"value": "2"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "一覧取得_正常系_limit指定なし",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"ステータスコードは200\", () => {\r",
+							"  pm.response.to.have.status(200);\r",
+							"});\r",
+							"\r",
+							"pm.test(\"レスポンスボディに正しいIDが含まれる\", () => {\r",
+							"  const jsonData = pm.response.json();\r",
+							"  pm.expect(jsonData[0].todoId).to.eql(parseInt(pm.environment.get(\"created_todo_id1\")));\r",
+							"  pm.expect(jsonData[1].todoId).to.eql(parseInt(pm.environment.get(\"created_todo_id2\")));\r",
+							"  pm.expect(jsonData[2].todoId).to.eql(parseInt(pm.environment.get(\"created_todo_id3\")));\r",
+							"});"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:8080/todos?title=eT",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"todos"
+					],
+					"query": [
+						{
+							"key": "title",
+							"value": "eT"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "一覧取得_正常系_title/limit指定なし",
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							""
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"ステータスコードは200\", () => {\r",
+							"  pm.response.to.have.status(200);\r",
+							"});\r",
+							"\r",
+							"pm.test(\"レスポンスボディに正しいIDが含まれる\", () => {\r",
+							"  const jsonData = pm.response.json();\r",
+							"  pm.expect(jsonData[0].todoId).to.eql(parseInt(pm.environment.get(\"created_todo_id1\")));\r",
+							"  pm.expect(jsonData[1].todoId).to.eql(parseInt(pm.environment.get(\"created_todo_id2\")));\r",
+							"  pm.expect(jsonData[2].todoId).to.eql(parseInt(pm.environment.get(\"created_todo_id3\")));\r",
+							"  pm.expect(jsonData[2].todoId).to.eql(parseInt(pm.environment.get(\"created_todo_id3\")));\r",
+							"});"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:8080/todos",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"todos"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "一覧取得_異常系_400_limit0以下",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"ステータスコードは400\", () => {\r",
+							"  pm.response.to.have.status(400);\r",
+							"});\r",
+							"pm.test(\"codeはbadRequest.invalid-field\", () => {\r",
+							"  const responseJson = pm.response.json();\r",
+							"  pm.expect(responseJson.code).to.eql('badRequest.invalid-field');\r",
+							"});"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:8080/todos?limit=0",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"todos"
+					],
+					"query": [
+						{
+							"key": "limit",
+							"value": "0"
+						}
+					]
+				}
+			},
+			"response": []
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "created_tag_id1",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "created_tag_id2",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "created_tag_id3",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "created_tag_id4",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "created_tag_id5",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "created_tag_id6",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "created_todo_id1",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "created_todo_id2",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "created_todo_id3",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "created_todo_id4",
+			"value": "",
+			"type": "string"
+		}
+	]
+}
