@@ -49,6 +49,23 @@ MyBatis内部では、起動時にXMLの内容を読み取って `MappedStatemen
 MyBatisが `SELECT` 結果をEntityにマッピングする際、内部でそのクラスを `new` します。
 *   このとき、**「引数なしのデフォルトコンストラクタ」** が必要です。Lombokなどで全引数コンストラクタのみを作っていると、MyBatisがインスタンス化に失敗してエラーになります。後述のLombok編を併せて参照してください。
 
+### 2-4.（内部補足）MyBatis内部フロー：起動時パースと実行時の振り分け
+「なぜ INSERT系は件数、SELECT はEntity/Listが返るのか」を内部実装レベルで補足します（トラブル対処には必須ではないが、仕組みを深掘りしたい場合の参考。旧 `_archive/以前にあった不具合.md` より統合）。
+
+**① 起動時（XMLパース）：`SqlCommandType` が決まる流れ**
+1.  `XMLMapperBuilder#configurationElement` … `<mapper>` タグ以下を読み込み、各 `<select>` 等を `XMLStatementBuilder` に渡す。
+2.  `XMLStatementBuilder#parseStatementNode()` … ノード名（select / insert / update / delete）を判定して `SqlCommandType`（SELECT / INSERT / UPDATE / DELETE / UNKNOWN）を決定し、`MappedStatement` を生成。
+3.  `Configuration#addMappedStatement` … 生成した `MappedStatement` を `Configuration` に登録。
+
+**② 実行時：`MapperMethod` が戻り値処理を振り分ける**
+Mapperメソッド呼び出し時、`org.apache.ibatis.binding.MapperMethod#execute(SqlSession, Object[])` が `command.getType()`（= `SqlCommandType`）を見て分岐します。
+*   `INSERT` → `sqlSession.insert(...)` → 戻り値 `int`（件数）
+*   `UPDATE` → `sqlSession.update(...)` → 戻り値 `int`（件数）
+*   `DELETE` → `sqlSession.delete(...)` → 戻り値 `int`（件数）
+*   `SELECT` → `sqlSession.selectOne / selectList` → 戻り値 Entity / List
+
+→ この振り分けにより、2-2（INSERT系は件数固定・`resultType`無視）と 2-3（SELECTはEntity生成でデフォルトコンストラクタ要）の挙動が決まります。
+
 ---
 
 ## 3. MyBatis 動的SQL & 構文 編
