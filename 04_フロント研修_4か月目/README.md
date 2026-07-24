@@ -12,6 +12,6 @@
 ## 構成
 - `01_html-css-js/` … `css/`・`html/`（`過去の質問/` 含む）
 - `02_TypeScript/` … `ts/`・`ts_react/`・`ts課題模範解答/`（模範解答は技術に隣接して配置）
-- `03_react/` … `01_basic/` `02_useState/` `03_hooks/` `04_async-auth/`（`_attachments/` に作図）・`レビュー観点/`
+- `03_react/` … `01_basic/` `02_useState/` `03_hooks/` `04_async-auth/`・`レビュー観点/`。作図は各サブフォルダの `_excalidraw/` に配置。
 
-> 命名規約: 順序付きフォルダは `NN_名前`。技術名は英語（`TypeScript`/`react`/`html-css-js`）。作図(`.excalidraw.md`)はトピックに隣接して維持（§3: 図はユニット毎）。
+> 命名規約: 順序付きフォルダは `NN_名前`。技術名は英語（`TypeScript`/`react`/`html-css-js`）。画像は `_attachments/`、Excalidrawは `_excalidraw/`（vault共通。図はユニット毎に維持＝§3）。

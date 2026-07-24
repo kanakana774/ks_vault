@@ -13,7 +13,7 @@
 - `50_全般/` … 全般Tips（VSCode困りごと 等）
 - `80_研修補助資料/` … VSCodeショートカット・質問テンプレート 等の補助資料
 - `99_Excalidrawライブラリ/` … **共有Excalidrawライブラリ**（`.excalidrawlib` 部品集）。個々の作図はユニット内に置く（§3）。ここは横断の共有ライブラリのみ
-- `Excalidraw/` … Excalidraw作図の既定保存先（**プラグイン設定 data.json が参照**。リネーム時は data.json も連動更新すること）
+- `_excalidraw/` … Excalidraw作図の既定保存先（**プラグイン設定 data.json が参照**。リネーム時は data.json も連動更新すること）
 - `claude/` … Claude Code 利用ガイド
 
 > 命名規約: 順序付きフォルダは `NN_名前`。
