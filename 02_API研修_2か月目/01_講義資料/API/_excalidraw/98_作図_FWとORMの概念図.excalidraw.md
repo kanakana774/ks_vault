@@ -401,13 +401,13 @@ Entity ^LJe6USu8
 Entity ^6jBssfYD
 
 ## Element Links
-sYa1Ek38: [[98.作図：FWとORMの概念図.excalidraw#Mapper]]
+sYa1Ek38: [[98_作図_FWとORMの概念図.excalidraw#Mapper]]
 
-oOCveNBa: [[98.作図：FWとORMの概念図.excalidraw#Mapper.xml]]
+oOCveNBa: [[98_作図_FWとORMの概念図.excalidraw#Mapper.xml]]
 
-OfCSxsEZ: [[98.作図：FWとORMの概念図.excalidraw#Formイメージ]]
+OfCSxsEZ: [[98_作図_FWとORMの概念図.excalidraw#Formイメージ]]
 
-WN5XiKZf: [[98.作図：FWとORMの概念図.excalidraw#Entity例]]
+WN5XiKZf: [[98_作図_FWとORMの概念図.excalidraw#Entity例]]
 
 ## Embedded Files
 1b4e1c0a4062bee3d9dca1242fa82344ab11a9a9: [[Pasted Image 20251113153153_284.png]]
