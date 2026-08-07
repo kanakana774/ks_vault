@@ -139,9 +139,7 @@ EXPLAIN (ANALYZE, BUFFERS) SELECT * FROM customers WHERE city = 'City_123';
 実行計画はツリー構造です。
 
 **基本ルール：字下げが深いノードほど先に実行される。** 子ノードが行を作り、親ノードがそれを受け取ります。
-
 **同じ深さに兄弟ノードが並ぶときは、上が「外側」・下が「内側」です。** ただし**どちらが先に動くかは結合方式で変わります**。
-
 *   `Nested Loop`：上（外側）が1行返すたびに下（内側）を実行する → **上が先**
 *   `Hash Join`：下（内側）を全件読んでハッシュテーブルを作り終えてから、上（外側）を流し込む → **下が先**
 
@@ -171,7 +169,7 @@ Hash Join                            ← ③ 最後に突き合わせ
 |        | **Limit**                                              | 必要な行数が揃った時点で打ち切る                                          |
 | その他    | Hash / BitmapOr / BitmapAnd / Materialize              | 上位ノードの下請けとして現れる                                           |
 
-**`Sort` は「消せるかもしれないノード」です。** インデックスは既にソート済みなので、うまく使えば `Sort` そのものが不要になります（→ §5 のコラム「これは効きます」）。また大量データのソートはメモリを食い、溢れるとディスクを使うため、`Sort` を見つけたら一度立ち止まる価値があります（→ 17-3）。
+**`Sort` は「消せるかもしれないノード」です。** インデックスは既にソート済みなので、うまく使えば `Sort` そのものが不要になります（→ §5 のコラム「これは効きます」）。また大量データのソートはメモリを食い、溢れるとディスクを使うため、`Sort` を見つけたら一度見直す価値があります（→ 17-3）。
 
 #### 結合方式（Join Methods）の使い分け
 
@@ -184,13 +182,11 @@ Hash Join                            ← ③ 最後に突き合わせ
 | **Merge Join**  | 双方をソートして並走する   | 両側が**すでにソート済み**（index順に読める）  |   ⭕   |
 
 **押さえるべきは「Hash が速い」ではありません。** 3方式に絶対的な優劣はなく、**条件が揃っているかどうか**で決まります。
-
 とくに `Nested Loop` は、**内側の結合キーにインデックスがあるかどうか**で性質が正反対になります。
-
 *   **インデックスがある** → 外側1行につき内側を数ページ引くだけ。**外側が少数なら最速**
 *   **インデックスがない** → 外側1行ごとに内側を全件走査することになる。**「外側の行数 × 内側のページ数」**で、行数が増えるほど手が付けられなくなる
 
-大量データ同士の結合で `Hash Join` が選ばれるのは、**ハッシュ化が魔法だから**ではなく、**インデックスが使えない状況で `Nested Loop` を選ぶと総当たりになってしまうから**です。「安いものを選んだ」というより「**高くつく選択肢を避けた**」と捉えるほうが実態に近いです。
+大量データ同士の結合で `Hash Join` が選ばれるのは、**インデックスが使えない状況で `Nested Loop` を選ぶと総当たりになってしまうから**です。「安いものを選んだ」というより「**高くつく選択肢を避けた**」と捉えるほうが実態に近いです。
 
 > ⚠️ **どれが選ばれるかは、データ量・インデックスの有無・`work_mem` の設定で簡単に入れ替わります。** 「この結合はいつも Hash」と覚えるのではなく、**その場で `EXPLAIN` して確かめてください。**
 
@@ -210,12 +206,12 @@ Hash Join                            ← ③ 最後に突き合わせ
 
 内訳を決めているパラメータのうち、押さえておきたいのは2つです。
 
-| パラメータ | 既定値 | 意味 |
-| :--- | :--- | :--- |
-| `seq_page_cost` | 1.0 | ページを**順番に**1枚読む |
-| `random_page_cost` | **4.0** | ページを**ランダムに**1枚読む |
+| パラメータ | 既定値 | 意味 | 適正値 |
+| :--- | :--- | :--- | :--- |
+| `seq_page_cost` | 1.0 | ページを**順番に**1枚読む | そのまま |
+| `random_page_cost` | **4.0** | ページを**ランダムに**1枚読む | HDD：**4.0**（既定）<br>SSD：**1.1〜2** |
 
-⚠️ `random_page_cost = 4.0` は「ランダムアクセスは順次読みの4倍高い」という**HDD時代の想定値**です。**SSD環境では 1.1〜2 に下げるのが定石**で、この1つの設定でインデックスを使うかどうかの判断が変わります（→ ケース5）。
+**既定値はHDD時代の想定です。** SSD環境で既定のままだと、プランナが「ランダムアクセスは高い」と過大評価して、**インデックスがあるのに使わない**判断をすることがあります（→ [[17-3_運用_チューニングの進め方|17-3]] §5）。
 #### rows（推定行数）
 プランナが統計情報から予測した出力行数です。
 
@@ -237,39 +233,55 @@ Hash Join                            ← ③ 最後に突き合わせ
 
 ⚠️ **`loops` が2以上のとき、`actual time` と `rows` は「1ループあたりの平均値」です。** 総量は自分で掛け算する必要があります。
 
-実際に `loops` が出る計画を見てみます。
+**`loops` が大きい行を見つけたら、必ず掛け算してください。** 表示上は小さな数字でも、実際はそこが処理の大半を占めていることがあります。ボトルネックの見落としは、たいていここで起きます。
 
-```sql
-EXPLAIN (ANALYZE, BUFFERS)
-SELECT c.name, o.order_date
-FROM customers c JOIN orders o ON c.customer_id = o.customer_id
-WHERE c.city IN ('City_1','City_2','City_3','City_4','City_5');
-```
+> [!example]- 手を動かして確かめる（`loops` の掛け算）
+> ```sql
+> EXPLAIN (ANALYZE, BUFFERS)
+> SELECT c.name, o.order_date
+> FROM customers c JOIN orders o ON c.customer_id = o.customer_id
+> WHERE c.city IN ('City_1','City_2','City_3','City_4','City_5');
+> ```
+>
+> ```text
+> Nested Loop (actual time=0.106..3.992 rows=10000 loops=1)
+>   Buffers: shared hit=3253
+>   ->  Bitmap Heap Scan on customers c (actual time=0.091..0.801 rows=1000 loops=1)
+>         Heap Blocks: exact=209
+>         Buffers: shared hit=219
+>         ->  Bitmap Index Scan on idx_customers_city (actual time=0.066..0.066 rows=1000 loops=1)
+>               Index Cond: ((city)::text = ANY ('{City_1,...,City_5}'::text[]))
+>               Buffers: shared hit=10
+>   ->  Index Only Scan using idx_orders_cust_cover on orders o
+>             (actual time=0.002..0.002 rows=10 loops=1000)      ← ★1,000回呼ばれている
+>         Index Cond: (customer_id = c.customer_id)
+>         Buffers: shared hit=3034
+> Execution Time: 4.225 ms
+> ```
+>
+> 内側は「10行」と表示されていますが、これは**1回あたりの平均**です。
+>
+> ```text
+> 総出力行数 = 10行 × 1,000ループ = 10,000行   ← 親の rows=10000 と一致
+> ```
+>
+> **`Buffers` を見ると差が歴然です。** 内側だけで **3,034ページ**（全体 3,253 の約93%）。外側の `Bitmap Heap Scan` は219ページしか読んでいません。**このクエリの重さは、ほぼ全部が内側のループにあります。**
 
-```text
-Nested Loop  (actual time=0.070..43.174 rows=10000 loops=1)
-  Buffers: shared hit=13005 read=214
-  ->  Bitmap Heap Scan on customers c  (actual time=0.064..0.438 rows=1000 loops=1)
-        Buffers: shared hit=219
-  ->  Index Scan using idx_orders_customer_id on orders o
-            (actual time=0.037..0.042 rows=10 loops=1000)      ← ★1,000回呼ばれている
-        Index Cond: (customer_id = c.customer_id)
-        Buffers: shared hit=12786 read=214
-Execution Time: 43.436 ms
-```
-
-内側の `Index Scan` は「0.042ms で 10行」と表示されていますが、これは**1回あたりの平均**です。
-
-```text
-総処理時間 = 0.042ms × 1,000ループ = 約42ms
-総出力行数 = 10行   × 1,000ループ = 10,000行   ← 親の rows=10000 と一致
-```
-
-全体が43.4msなので、**そのうち約42ms（約97%）が内側のループ**でした。表示上は「0.042ms」という小さな数字なのに、実際は処理時間のほぼ全部を占めています。
-
-`Buffers` も同じです。内側だけで13,000ページ。外側の `Bitmap Heap Scan` は219ページしか読んでいません。**「どこが重いのか」は `loops` の掛け算をしないと見えません。**
-
-ループが多いノードは**表示上のコストが小さく見える**ため、ここを見落とすと真のボトルネックを取り逃します。**`loops` が大きい行を見つけたら、必ず掛け算してください。**
+> 💡 **`Buffers` は「そのノードと、その下にある全ノードの合計」です。**
+>
+> 上の計画で確かめられます。
+>
+> | ノード | `Buffers` |
+> | :--- | ---: |
+> | `Bitmap Index Scan`（子） | 10 |
+> | `Bitmap Heap Scan`（親） | **219** ← 子の10を**含む**。本体から読んだのは209 |
+> | `Nested Loop`（一番上） | **3,253** ← 219 ＋ 3,034 |
+>
+> `Bitmap Heap Scan` の219は「本体209ページ ＋ インデックス10ページ」です。`Heap Blocks: exact=209` がその内訳を裏付けています。
+>
+> **つまり「このノード単体で何ページ読んだか」を知りたいときは、子のぶんを引く必要があります。** `actual time` も同じ性質（子の時間を含む累積値）なので、セットで覚えてください。
+>
+> ※ 資料によっては `Bitmap Index Scan` の行を省略した実行計画を載せていることがありますが、**実際には必ず親子ペアで表示されます**。省略されているだけです。
 
 ### 3-5. Buffers（I/Oの実態）
 
@@ -295,36 +307,35 @@ Execution Time: 43.436 ms
 *   **`Index Cond`** … **インデックスで絞り込めた**条件。速い。
 *   **`Filter`** … インデックスでは絞れず、**行を取ってきた後にCPUで捨てた**条件。無駄。
 
-**【手を動かす】実際に比べる**
+> **チューニングの定石**：**`Filter` に出ている列を複合インデックスに足して、`Index Cond` へ昇格させる。** 特に `Rows Removed by Filter` が大きい場合に効きます。
 
-`orders(customer_id)` と `orders(order_date)` を**別々の単一列インデックス**として持っている状態で、両方を条件にします。
-
-```sql
-EXPLAIN SELECT * FROM orders WHERE customer_id = 1234 AND order_date >= '2025-01-01';
-```
-
-```text
-Bitmap Heap Scan on orders  (cost=4.50..43.54 rows=5 width=25)
-  Filter: (order_date >= '2025-01-01 00:00:00'::timestamp without time zone)   ← ⚠️ 後で捨てている
-  ->  Bitmap Index Scan on idx_orders_customer_id  (cost=0.00..4.50 rows=10 width=0)
-        Index Cond: (customer_id = 1234)                                        ← これだけで絞った
-```
-
-`customer_id` で10件に絞ってから、`order_date` は**取ってきた後にフィルタ**しています。では複合インデックスにすると──
-
-```sql
-CREATE INDEX idx_orders_cust_date ON orders (customer_id, order_date);
-```
-
-```text
-Bitmap Heap Scan on orders  (cost=4.48..24.16 rows=5 width=25)
-  ->  Bitmap Index Scan on idx_orders_cust_date  (cost=0.00..4.47 rows=5 width=0)
-        Index Cond: ((customer_id = 1234) AND (order_date >= '2025-01-01'::timestamp))
-```
-
-**`Filter` が消えて、両方の条件が `Index Cond` に昇格しました。** コストも 43.54 → 24.16 に下がっています。
-
-> **チューニングの定石**：`Filter` に出ている列を複合インデックスに足して `Index Cond` へ昇格させる。特に `Rows Removed by Filter` が大きい場合に効きます。
+> [!example]- 手を動かして確かめる（`Filter` を `Index Cond` へ昇格させる）
+> `orders(customer_id)` と `orders(order_date)` を**別々の単一列インデックス**として持っている状態で、両方を条件にします。
+>
+> ```sql
+> EXPLAIN SELECT * FROM orders WHERE customer_id = 1234 AND order_date >= '2025-01-01';
+> ```
+>
+> ```text
+> Bitmap Heap Scan on orders  (cost=4.50..43.54 rows=5 width=25)
+>   Filter: (order_date >= '2025-01-01 00:00:00'::timestamp without time zone)   ← ⚠️ 後で捨てている
+>   ->  Bitmap Index Scan on idx_orders_customer_id  (cost=0.00..4.50 rows=10 width=0)
+>         Index Cond: (customer_id = 1234)                                        ← これだけで絞った
+> ```
+>
+> `customer_id` で10件に絞ってから、`order_date` は**取ってきた後にフィルタ**しています。では複合インデックスにすると──
+>
+> ```sql
+> CREATE INDEX idx_orders_cust_date ON orders (customer_id, order_date);
+> ```
+>
+> ```text
+> Bitmap Heap Scan on orders  (cost=4.48..24.16 rows=5 width=25)
+>   ->  Bitmap Index Scan on idx_orders_cust_date  (cost=0.00..4.47 rows=5 width=0)
+>         Index Cond: ((customer_id = 1234) AND (order_date >= '2025-01-01'::timestamp))
+> ```
+>
+> **`Filter` が消えて、両方の条件が `Index Cond` に昇格しました。** コストも 43.54 → 24.16 に下がっています。
 
 ---
 
@@ -492,88 +503,23 @@ Execution Time: 144.680 ms
 ```
 
 **同じテーブル、同じインデックス、同じSQLの形。違うのは検索する値だけ。** それでも一方は148ページ、もう一方は7,255ページ（全件走査）になりました。
-
 プランナは統計情報から「この値は何件くらいヒットするか」を知っています。90%もヒットするなら、インデックス経由で飛び回るより全部読んだ方が安いと**正しく**判断しています。
 
-> **ここから学ぶこと**：「インデックスが使われない」と相談を受けたとき、**まず何の値で検索しているかを聞く**。値によって計画が変わるのは正常な動作です。
+### ケース5：プランナも間違えることがある（→ 17-3 §5）
 
-### ケース5：【上級】プランナは間違えることもある
+ここまで4つのケースは、すべて**プランナが正しく判断していた**例でした。SQLかインデックスの側に問題があり、それを直せば計画も直りました。
 
-最後に「コストが低い＝速い」が崩れる実例です。`city` 5件分（顧客1,000人）を結合します。
+**ですが、プランナ自身が間違えることもあります。** 典型は「**インデックスがあるのに `Seq Scan` が選ばれる**」というものです。
 
-```sql
-EXPLAIN (ANALYZE, BUFFERS)
-SELECT c.name, o.order_date
-FROM customers c JOIN orders o ON c.customer_id = o.customer_id
-WHERE c.city IN ('City_1','City_2','City_3','City_4','City_5');
-```
+原因の1つが §3-3 で触れた **`random_page_cost`** です。既定値の `4.0` はHDD時代の想定なので、SSD環境では「インデックスを使う計画」が実際より高く見積もられます。実測では、**設定を変えるだけで312ms → 43ms（約7倍）**になる計画が既定では選ばれませんでした。
 
-**プランナが選んだ計画（`random_page_cost = 4`：既定値）**
+**この話は、SQLやインデックスではなく「サーバー設定」の領域**です。配属後に本番のチューニングを任されたときに読むものとして、[[17-3_運用_チューニングの進め方|17-3 実務編]] §5 にまとめてあります。
 
-```text
-Hash Join  (cost=1282.80..21162.91 rows=9960 width=22)
-           (actual time=21.038..312.043 rows=10000 loops=1)
-  Hash Cond: (o.customer_id = c.customer_id)
-  Buffers: shared hit=7468 read=6
-  ->  Seq Scan on orders o  (actual time=0.029..190.397 rows=1000000 loops=1)  ← indexがあるのに使わない
-        Buffers: shared hit=7255
-  ->  Hash  (actual time=20.981..20.983 rows=1000 loops=1)
-        Buckets: 1024  Batches: 1  Memory Usage: 59kB
-        ->  Bitmap Heap Scan on customers c  (actual time=2.229..20.702 rows=1000 loops=1)
-Execution Time: 312.427 ms
-```
+*   `random_page_cost` の適正値（HDD 4.0／SSD 1.1〜2.0）
+*   **「読んだページ数が少ない方が速い」とは限らない**という、この章の目安が崩れるケース
+*   `enable_seqscan = off` などで別の計画を作らせて比べる方法
+*   `cost` がどう計算されているかの内訳
 
-**`random_page_cost` をSSD相当に下げると**
-
-```sql
-SET random_page_cost = 1.1;
-```
-
-```text
-Nested Loop  (cost=15.10..8662.60 rows=9960 width=22)
-             (actual time=0.070..43.174 rows=10000 loops=1)
-  Buffers: shared hit=13005 read=214
-  ->  Bitmap Heap Scan on customers c  (actual time=0.064..0.438 rows=1000 loops=1)
-        Buffers: shared hit=219
-  ->  Index Scan using idx_orders_customer_id on orders o
-            (actual time=0.037..0.042 rows=10 loops=1000)
-        Index Cond: (customer_id = c.customer_id)
-        Buffers: shared hit=12786 read=214
-Execution Time: 43.436 ms
-```
-
-*   **312.4ms → 43.4ms。約7倍速い計画が、既定設定では選ばれませんでした。**
-*   **なぜ**：既定の `random_page_cost = 4.0` は「ランダムアクセスは4倍高い」というHDD時代の想定です。実際にはデータが共有バッファに乗っており、罰則はほぼゼロでした。プランナのコストモデルが現実とズレていたのです。
-
-> **ここで1つ、面白い観察があります。** 速い方（Nested Loop）の方が、読んだページ数は**多い**のです（13,219ページ 対 7,474ページ）。
-> なぜ速いのか。Hash Join は `orders` の**100万行すべてを執行器に通して**ハッシュ照合しています（`Seq Scan` だけで190ms）。一方 Nested Loop が触った13,000ページはほぼ全て `shared hit`、つまり**メモリ上の同じインデックス領域を繰り返し叩いているだけ**なので、1回あたりが極めて安いのです。
-> **「読んだページ数」は本番でディスクを読むときの目安**であって、全部キャッシュに乗っている環境では「何行処理したか」が効いてきます。目安は目安として、最後は実測で判断してください。
-*   **実務での意味**：「インデックスがあるのに Seq Scan が選ばれる」と悩んだとき、SQLやインデックスではなく**この設定が原因**であることは珍しくありません。
-
-**【手を動かす】プランナに別の計画を作らせて比較する**
-
-「なぜこっちを選んだの？」を調べる道具があります。特定の方式を一時的に禁止して、もう一方のコストを見るのです。
-
-```sql
-SET enable_seqscan = off;    -- Seq Scan を禁止
-EXPLAIN (ANALYZE, BUFFERS) SELECT ... ;
-RESET enable_seqscan;        -- 必ず戻す
-
--- 他にもこんなスイッチがあります
--- enable_indexscan / enable_bitmapscan / enable_hashjoin / enable_nestloop
-```
-
-セッション限定なので安全です。**両方のコストと実測を並べて見る**と、プランナの判断根拠が見えてきます。
-
-> **参考：cost はどう作られているのか**（読み物。講義では扱いません）
-> `cost` は魔法の数字ではなく、**ページ数と行数からの単純な足し算**です。`customers` の全件走査 `cost=0.00..2485.00` は次のように分解できます。
-> ```text
-> seq_page_cost      1.0    × 1,235ページ  = 1,235
-> cpu_tuple_cost     0.01   × 100,000行    = 1,000
-> cpu_operator_cost  0.0025 × 100,000行    =   250
->                                    合計  = 2,485   ← 表示と一致
-> ```
-> 「機械的に計算しているだけ」と分かれば、2つの計画のコストを見比べる作業に納得がいくはずです。各パラメータは `SHOW cpu_tuple_cost;` などで確認できます。
 ### まとめ：チューニングの優先順位
 
 1.  **読んでいるページ数（`Buffers` の hit + read）が多いノードを探す**
@@ -584,7 +530,7 @@ RESET enable_seqscan;        -- 必ず戻す
 4.  **結合の「内側（字下げが深い方）」が `Seq Scan` になっていないか見る**
     *   `loops` が多いとき、ここでのSeq Scanは致命的です。
 5.  **推定 `rows` と実測 `rows` が大きくズレていないか見る**
-    *   ズレていれば `ANALYZE`。それでも直らなければケース5のようにコスト設定を疑います。
+    *   ズレていれば `ANALYZE`。それでも直らなければ、コスト設定を疑います（→ [[17-3_運用_チューニングの進め方|17-3]] §5）。
 
 ---
 
@@ -617,15 +563,13 @@ RESET enable_seqscan;        -- 必ず戻す
     ```
 
 **7,255ページ → 17ページ。78.9ms → 0.41ms（約191倍）。同じ結果を返すSQLです。**
+同じ理由で、次もすべて効きません。**「列を触らない」**と覚えてください。
 
-同じ理由で、次もすべて効きません。**「列を触ったら負け」**と覚えてください。
-
-| ❌ 効かない書き方 | ⭕ 直し方 |
-| :--- | :--- |
+| ❌ 効かない書き方                                       | ⭕ 直し方                                           |
+| :---------------------------------------------- | :---------------------------------------------- |
 | `WHERE order_date + interval '30 days' < now()` | `WHERE order_date < now() - interval '30 days'` |
-| `WHERE UPPER(name) = 'ALICE'` | 関数インデックス、または `citext` 型 |
-| `WHERE customer_id::text = '1234'` | `WHERE customer_id = 1234` |
-
+| `WHERE UPPER(name) = 'ALICE'`                   | 関数インデックス                                        |
+| `WHERE customer_id::text = '1234'`              | `WHERE customer_id = 1234`                      |
 **キャストについて補足。** `customer_id::text = '1234'` は列側にキャストが付くので効きません。
 
 ```text
@@ -637,8 +581,6 @@ Seq Scan on customers   Filter: ((customer_id)::text = '1234'::text)
 ```text
 Index Scan using customers_pkey on customers   Index Cond: (customer_id = 1234)
 ```
-
-> 「型が違うとインデックスが効かない」というのは**他のDB（MySQLなど）の話**です。PostgreSQLでは、文字列型の列に数値を渡すとそもそもエラーになります（`operator does not exist: character varying = integer`）。**気にすべきは「列側にキャストが付いていないか」だけ**です。
 
 **どうしても加工した形で検索したい場合は、関数インデックスを作ります。**
 
@@ -683,42 +625,48 @@ CREATE INDEX idx_customers_email_lower ON customers (LOWER(email));
 *   ❌ **効かない**：`LIKE '%ABC'` `LIKE '%ABC%'`（後方・部分一致）
 *   **理由**：辞書で「あ」から始まる単語はすぐ引けますが、「あ」で終わる単語は最初から最後まで読むしかありません。
 
-⚠️ **`_` もワイルドカード（任意の1文字）です。** そのため絞り込みに使える前置きは `_` の手前までになります。
-
-```sql
-CREATE INDEX idx_customers_name ON customers (name);
-ANALYZE customers;
-
--- customers.name は 'Customer_1' 'Customer_2' ... という値
-EXPLAIN (ANALYZE, BUFFERS) SELECT * FROM customers WHERE name LIKE 'Customer_5555%';
-EXPLAIN (ANALYZE, BUFFERS) SELECT * FROM customers WHERE name LIKE 'Customer\_5555%';
-```
+**なぜ前方一致だけ効くのか。** PostgreSQL は `LIKE 'ABC%'` を、内部で**範囲検索に読み替えている**からです。
 
 ```text
--- ❌ エスケープなし：前置きが 'Customer' までしか取れず、全件が候補になる
-Seq Scan on customers  (cost=0.00..2485.00 rows=10 width=69)
-                       (actual time=0.882..11.440 rows=11 loops=1)
-  Filter: ((name)::text ~~ 'Customer_5555%'::text)
-  Rows Removed by Filter: 99989
-  Buffers: shared hit=1235
-Execution Time: 11.465 ms
-
--- ⭕ _ をエスケープ：本来の前方一致として扱われる
-Index Scan using idx_customers_name on customers  (cost=0.42..8.44 rows=10 width=69)
-                                                  (actual time=0.070..0.074 rows=11 loops=1)
-  Index Cond: (((name)::text >= 'Customer_5555'::text) AND ((name)::text < 'Customer_5556'::text))
-  Filter: ((name)::text ~~ 'Customer\_5555%'::text)
-  Buffers: shared hit=4 read=1
-Execution Time: 0.085 ms
+Index Cond: ((name)::text >= 'ABC'::text) AND ((name)::text < 'ABD'::text)
 ```
 
-**1,235ページ → 5ページ。11.5ms → 0.085ms（約134倍）。** バックスラッシュ1文字の差です。
+「ABC以上、ABD未満」──これはソート済みのB-Treeがいちばん得意な形です（17-1 §5-4）。逆に `'%ABC'` は開始位置が決まらないので、この読み替えができません。
 
-`Index Cond` に注目してください。**PostgreSQLが前方一致を範囲検索（`>= 'Customer_5555' AND < 'Customer_5556'`）に読み替えている**のが見えます。これが「前方一致ならインデックスが使える」の中身です。
+> [!example]- おまけ：`_` もワイルドカードなので効かなくなることがある
+> **`_` は「任意の1文字」を意味するワイルドカードです。** そのため絞り込みに使える前置きは、**`_` の手前まで**になります。
+>
+> `customers.name` が `Customer_1` `Customer_2` … という値のとき：
+>
+> ```sql
+> -- ❌ 前置きが 'Customer' までしか取れない
+> SELECT * FROM customers WHERE name LIKE 'Customer_5555%';
+>
+> -- ⭕ _ をエスケープすれば、本来の前方一致になる
+> SELECT * FROM customers WHERE name LIKE 'Customer\_5555%';
+> ```
+>
+> ```text
+> -- ❌ エスケープなし
+> Seq Scan on customers
+>   Rows Removed by Filter: 99989
+>   Buffers: shared hit=1235
+> Execution Time: 11.465 ms
+>
+> -- ⭕ エスケープあり
+> Index Scan using idx_customers_name on customers
+>   Index Cond: (((name)::text >= 'Customer_5555'::text) AND ((name)::text < 'Customer_5556'::text))
+>   Buffers: shared hit=4 read=1
+> Execution Time: 0.085 ms
+> ```
+>
+> **1,235ページ → 5ページ。バックスラッシュ1文字の差です。**
+>
+> ユーザーが入力した文字列をそのまま `LIKE` に渡す作りだと、`_` や `%` が紛れ込んで**意図しない検索になる**ことがあります。検索機能を作るときは、エスケープ処理を入れてください。
 
-> **実務での注意**：前方一致でインデックスが効くかは、DBの照合順序に依存します。`ja_JP.UTF-8` などの環境では `text_pattern_ops` を指定して作る必要があります。自分の環境は `SELECT datcollate FROM pg_database WHERE datname = current_database();` で確認してください（研修環境は `C` なので、そのままでも効きます）。
-> 部分一致 `'%ABC%'` を高速化したい場合は `pg_trgm` 拡張 + GINインデックスの領域です。
-
+> ⚠️ **本番環境で「前方一致なのにインデックスが効かない」ことがあります。**
+> 日本語向けの設定（照合順序が `ja_JP.UTF-8` など）だと、上の範囲検索への読み替えが成立しないためです。その場合は `CREATE INDEX ... (name text_pattern_ops);` と指定して作り直すと効くようになります。
+> **今は「そういう落とし穴がある」とだけ覚えておけば十分です。** 研修環境は `C` ロケールなので、そのまま効きます。
 ### ④ 複合インデックスの順番を無視している
 
 `(A, B)` の順で作った場合、**A を指定せず B だけで検索しても効きません**（1-2 の構造図の通り）。
@@ -758,39 +706,20 @@ Seq Scan on orders  (cost=0.00..19755.00 rows=100 width=25)
 
 ### ⑥ 選択性が低い（絞り込めない列）
 
-`membership_id`（4種類・各25%）にインデックスを張って、実際に測ってみます。
+`membership_id`（4種類・各25%）のように、**取りうる値が少ない列**へのインデックスです。
 
-```sql
-CREATE INDEX idx_customers_membership ON customers (membership_id);
-ANALYZE customers;
-EXPLAIN (ANALYZE, BUFFERS) SELECT * FROM customers WHERE membership_id = 2;
-```
+**結論を先に言うと、こうなります。**
 
-```text
--- インデックスあり
-Bitmap Heap Scan on customers  (cost=279.80..1823.67 rows=24710 width=69)
-                               (actual time=2.622..5.367 rows=25000 loops=1)
-  Buffers: shared hit=1235 read=23        ← 合計1,258ページ
-Execution Time: 5.988 ms
+> **選択性が低い列にインデックスを張っても、読むページ数（I/O）は減りません。**
+> 25%も該当すれば、**どのページにも該当行がある**ので、結局は全ページ読むことになります。
 
--- Seq Scan を強制して比較
-Seq Scan on customers  (cost=0.00..2485.00 rows=24710 width=69)
-                       (actual time=0.022..23.130 rows=25000 loops=1)
-  Filter: (membership_id = 2)
-  Rows Removed by Filter: 75000
-  Buffers: shared hit=1235                ← 1,235ページ
-Execution Time: 23.820 ms
-```
+「速くならない」わけではありません。**行を捨てるCPUの仕事は減る**ので、時間だけ見れば速くなります（実測で 23.8ms → 6.0ms）。ですが**読んだページ数は 1,235 → 1,258 で、むしろ増えています。**
 
-ここで**重要な観察**です。
+つまり得られるのは**CPU分の改善だけ**です。これを、**書き込み負荷（17-1 §8：INSERTが数倍遅くなる）と容量の代償**と天秤にかけてください。
 
-*   時間は 23.8ms → 5.99ms で**4倍速くなっています**。
-*   しかし**読んだページ数は 1,235 → 1,258 で、むしろ増えています。**
-
-つまり **I/Oは1ページも減っていません。** 25%も該当すれば、どのページにも該当行があるので、結局全ページ読むことになります。速くなったのは「75,000行を捨てる処理が消えた」という**CPUの節約分だけ**です。
-
-*   さらに選択率が上がると、プランナはインデックスを使うことすらやめます（ケース4の `status = 'Completed'` 90% → `Seq Scan`）。
-*   **結論**：選択性が低い列へのインデックスは、**I/O削減にはならない**。得られるのはCPU分の改善だけなので、**書き込み負荷（17-1 §8 で見た7.6倍）と容量の代償に見合うか**を天秤にかけてください。
+*   **1回のクエリを速くしたいだけなら、効果はある**（ただしI/Oは減らない）
+*   **更新が多いテーブルなら、まず割に合わない**
+*   さらに選択率が上がると、**プランナはインデックスを使うことすらやめます**（ケース4の `status = 'Completed'` 90% → `Seq Scan`）
 
 「とりあえずインデックスを張る」が最も無意味になる典型です。**その列で本当に絞り込めるのか**を先に確認しましょう。
 
@@ -798,6 +727,38 @@ Execution Time: 23.820 ms
 -- 列ごとの異なる値の数を見る（n_distinct が小さいほど絞り込めない）
 SELECT attname, n_distinct FROM pg_stats WHERE tablename = 'customers';
 ```
+
+> [!example]- 手を動かして確かめる（時間は速くなるのに、ページ数は減らない）
+> ```sql
+> CREATE INDEX idx_customers_membership ON customers (membership_id);
+> ANALYZE customers;
+> EXPLAIN (ANALYZE, BUFFERS) SELECT * FROM customers WHERE membership_id = 2;
+> ```
+>
+> ```text
+> -- インデックスあり
+> Bitmap Heap Scan on customers  (cost=279.80..1823.67 rows=24710 width=69)
+>                                (actual time=2.622..5.367 rows=25000 loops=1)
+>   Buffers: shared hit=1235 read=23        ← 合計1,258ページ
+> Execution Time: 5.988 ms
+>
+> -- Seq Scan を強制して比較
+> Seq Scan on customers  (cost=0.00..2485.00 rows=24710 width=69)
+>                        (actual time=0.022..23.130 rows=25000 loops=1)
+>   Filter: (membership_id = 2)
+>   Rows Removed by Filter: 75000
+>   Buffers: shared hit=1235                ← 1,235ページ
+> Execution Time: 23.820 ms
+> ```
+>
+> | | 実行時間 | 読んだページ数 |
+> | :--- | ---: | ---: |
+> | Seq Scan | 23.8 ms | 1,235 |
+> | インデックスあり | **6.0 ms** | **1,258**（増えている） |
+>
+> **時間は4倍速いのに、I/Oは1ページも減っていません。** 速くなったのは「75,000行を捨てる処理が消えた」ぶんだけです。
+>
+> ※ この研修環境では全ページがメモリに載っているので、CPU分の改善がそのまま時間差として出ています。**本番でディスクを読む環境では、I/Oが減らない＝改善幅はもっと小さくなります。**
 
 ### ⑦ 統計情報が古い
 
