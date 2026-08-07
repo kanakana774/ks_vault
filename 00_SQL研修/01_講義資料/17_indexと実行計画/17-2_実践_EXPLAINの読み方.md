@@ -52,39 +52,7 @@ CREATE INDEX idx_orders_cust_date ON orders (customer_id, order_date);
 
 `(A, B)` の順で作ると、`WHERE A = ?` や `WHERE A = ? AND B = ?` では効きますが、**`WHERE B = ?` だけでは効きません**。「辞書で2文字目だけ分かっていても引けない」のと同じです。
 
-```mermaid
-graph TD
-    subgraph BTree_Index
-        Root["ルートノード ('鈴木', '一郎')"]
-        
-        subgraph Intermediate_Nodes["中間ノード (第1キー, 第2キー)"]
-            Intermediate1["ノード ('佐藤', '次郎')"]
-            Intermediate2["ノード ('田中', '太郎')"]
-        end
-
-        subgraph Leaf_Nodes["リーフノード (ソートされた実データへのポインタ)"]
-            Leaf1["('佐藤', '一郎')<br>('佐藤', '三郎')"]
-            Leaf2["('佐藤', '次郎')<br>('佐藤', '花子')"]
-            Leaf3["('鈴木', '一郎')<br>('鈴木', '花子')"]
-            Leaf4["('田中', '太郎')<br>('田中', '花子')"]
-        end
-    end
-
-    Root -- "値 < ('鈴木', '一郎')" --> Intermediate1
-    Root -- "値 >= ('鈴木', '一郎')" --> Intermediate2
-    Intermediate1 -- "値 < ('佐藤', '次郎')" --> Leaf1
-    Intermediate1 -- "値 >= ('佐藤', '次郎')" --> Leaf2
-    Intermediate2 -- "値 < ('田中', '太郎')" --> Leaf3
-    Intermediate2 -- "値 >= ('田中', '太郎')" --> Leaf4
-
-    style Root fill:#f9f,stroke:#333,stroke-width:2px
-    style Intermediate1 fill:#bbf,stroke:#333,stroke-width:2px
-    style Intermediate2 fill:#bbf,stroke:#333,stroke-width:2px
-    style Leaf1 fill:#9f9,stroke:#333,stroke-width:1px
-    style Leaf2 fill:#9f9,stroke:#333,stroke-width:1px
-    style Leaf3 fill:#9f9,stroke:#333,stroke-width:1px
-    style Leaf4 fill:#9f9,stroke:#333,stroke-width:1px
-```
+![[17-2_複合インデックスの並び方.excalidraw]]
 
 **まず「苗字」でソートされ、同じ苗字の中で「名前」でソートされている**のが分かります。複合キーは別々のインデックスではなく、**セットで1つの値**として並んでいます。だから苗字を指定せずに名前だけでは引けないのです。
 
@@ -95,7 +63,7 @@ graph TD
 CREATE INDEX idx_orders_cust_cover ON orders (customer_id) INCLUDE (order_date);
 ```
 
-`INCLUDE` の列は検索条件には使えませんが、**取得する値として使える**ので、テーブル本体を読まずに済みます（`Index Only Scan`）。PostgreSQL 11 以降の機能です。
+`INCLUDE` の列は検索条件には使えませんが、**取得する値として使える**ので、テーブル本体を読まずに済みます（`Index Only Scan`）。
 
 **④ 関数インデックス**
 
@@ -116,9 +84,7 @@ CREATE INDEX idx_customers_email_lower ON customers (LOWER(email));
 CREATE INDEX CONCURRENTLY idx_customers_city ON customers (city);
 ```
 
-ただしロックを取らない代わりに、テーブルを**2回スキャン**するので通常より時間がかかり、**トランザクションブロックの中では実行できません**。失敗したときの後始末など細かい作法もあるので、実際に本番で使うときは [[17-3_運用_チューニングの進め方|17-3 実務編]] の §2-5 を読んでから手順を組んでください。
-
-> **ここで覚えて帰るのは「インデックス作成はタダではない。稼働中に作るなら `CONCURRENTLY`」の一点で十分です。** 細かい作法は、実際にその場面が来たときに調べれば間に合います。
+ただしロックを取らない代わりに、テーブルを**2回スキャン**するので通常より時間がかかり、**トランザクションブロックの中では実行できません**。失敗したときの後始末など細かい作法もあるので、気を付けましょう。
 
 ---
 
@@ -135,7 +101,7 @@ EXPLAIN (ANALYZE, BUFFERS) SELECT * FROM customers WHERE city = 'City_123';
 ```
 
 *   **`ANALYZE`**: 実際に実行して実測値（`actual time`, 実際の行数）を出す。
-*   **`BUFFERS`**: **読んだページ数**を出す。17-1 で見た通りここが本質なので、**常に付けてください。**
+*   **`BUFFERS`**: **読んだページ数**を出す。ここが本質なので、**常に付けてください。**
 
 > ⚠️ **`ANALYZE` は「実際にクエリを実行する」オプションです。**
 > `SELECT` なら安全ですが、`UPDATE` / `DELETE` / `INSERT` に付けると**本当にデータが変わります**。更新系で実行計画を見たいときは、必ずトランザクションで囲んで戻してください。
@@ -184,20 +150,20 @@ Hash Join                            ← ③ 最後に突き合わせ
 
 ### 3-2. ノードの種類
 
-| 分類 | ノード | 内容 | 評価 |
-| :--- | :--- | :--- | :---: |
-| スキャン | **Seq Scan** | 全件走査 | ⚠️ |
-| | **Index Scan** | インデックスから住所を得て本体を狙い撃ち | ✅ |
-| | **Index Only Scan** | 本体を見ずインデックス内で完結 | 🌟 |
-| | **Bitmap Index Scan**<br>＋ Bitmap Heap Scan | 住所を地図にしてページ順にまとめ読み | 🆗 |
-| | **Index Scan Backward** | インデックスを逆順に辿る（`ORDER BY ... DESC`） | ✅ |
-| 結合 | **Nested Loop** | 外側1行ごとに内側をスキャン | 🆗 |
-| | **Hash Join** | ハッシュテーブルを作って突き合わせ | 🆗 |
-| | **Merge Join** | 双方をソートして突き合わせ | 🆗 |
-| ソート・集約 | **Sort** | 並べ替え。`ORDER BY` だけでなく `GROUP BY` や `Merge Join` の前処理でも現れる | ⚠️ |
-| | **Aggregate** / **HashAggregate** / **GroupAggregate** | 集計（`COUNT` `SUM` `GROUP BY`） | 🆗 |
-| | **Limit** | 必要な行数が揃った時点で打ち切る | ✅ |
-| その他 | Hash / BitmapOr / BitmapAnd / Materialize | 上位ノードの下請けとして現れる | |
+| 分類     | ノード                                                    | 内容                                                        |
+| :----- | :----------------------------------------------------- | :-------------------------------------------------------- |
+| スキャン   | **Seq Scan**                                           | 全件走査                                                      |
+|        | **Index Scan**                                         | インデックスから住所を得て本体を狙い撃ち                                      |
+|        | **Index Only Scan**                                    | 本体を見ずインデックス内で完結                                           |
+|        | **Bitmap Index Scan**<br>＋ Bitmap Heap Scan            | 住所を地図にしてページ順にまとめ読み                                        |
+|        | **Index Scan Backward**                                | インデックスを逆順に辿る（`ORDER BY ... DESC`）                         |
+| 結合     | **Nested Loop**                                        | 外側1行ごとに内側をスキャン                                            |
+|        | **Hash Join**                                          | ハッシュテーブルを作って突き合わせ                                         |
+|        | **Merge Join**                                         | 双方をソートして突き合わせ                                             |
+| ソート・集約 | **Sort**                                               | 並べ替え。`ORDER BY` だけでなく `GROUP BY` や `Merge Join` の前処理でも現れる |
+|        | **Aggregate** / **HashAggregate** / **GroupAggregate** | 集計（`COUNT` `SUM` `GROUP BY`）                              |
+|        | **Limit**                                              | 必要な行数が揃った時点で打ち切る                                          |
+| その他    | Hash / BitmapOr / BitmapAnd / Materialize              | 上位ノードの下請けとして現れる                                           |
 
 **`Sort` は「消せるかもしれないノード」です。** インデックスは既にソート済みなので、うまく使えば `Sort` そのものが不要になります（→ §5 のコラム「これは効きます」）。また大量データのソートはメモリを食い、溢れるとディスクを使うため、`Sort` を見つけたら一度立ち止まる価値があります（→ 17-3）。
 
@@ -205,11 +171,11 @@ Hash Join                            ← ③ 最後に突き合わせ
 
 3方式の違いは、**「総当たり（外側の行数 × 内側の行数）をどう避けるか」**の違いです。ここでは選ばれる条件だけ押さえてください。
 
-| 方式 | 総当たりの回避方法 | 選ばれる条件 | 非等価結合 |
-| :--- | :--- | :--- | :---: |
-| **Nested Loop** | 内側をインデックスで引く | 外側が少数 ＋ **内側の結合キーにindexがある** | ⭕ |
-| **Hash Join** | 内側をハッシュテーブルにする | **大量データ同士**。indexは不要 | ✕ |
-| **Merge Join** | 双方をソートして並走する | 両側が**すでにソート済み**（index順に読める） | ⭕ |
+| 方式              | 総当たりの回避方法      | 選ばれる条件                       | 非等価結合 |
+| :-------------- | :------------- | :--------------------------- | :---: |
+| **Nested Loop** | 内側をインデックスで引く   | 外側が少数 ＋ **内側の結合キーにindexがある** |   ⭕   |
+| **Hash Join**   | 内側をハッシュテーブルにする | **大量データ同士**。indexは不要         |   ✕   |
+| **Merge Join**  | 双方をソートして並走する   | 両側が**すでにソート済み**（index順に読める）  |   ⭕   |
 
 実測では、同じ結合でコストが **Hash Join 23,365 ＜ Merge Join 34,825 ＜ Nested Loop 76,863** と3倍以上変わりました。
 
