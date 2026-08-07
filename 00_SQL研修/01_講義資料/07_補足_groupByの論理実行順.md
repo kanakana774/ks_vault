@@ -171,13 +171,18 @@ avg_salary 降順に並べ替え
 ---
 
 ### 理解度チェック
+
+> [!note] このセクションで使うデータについて
+> 以下の `SAMPLE_PRODUCTS` は、**論理実行順を追いやすくするために用意した説明専用の簡略データ**です。
+> 演習で使う `products_mst`（`03_解答/02_DDL（前半用）.md` の初期データ）とは**行数も中身も別物**なので、実際にDBで実行しても同じ結果にはなりません。ここでは「どの句で何行に絞られるか」の流れだけを追ってください。
+
 下記はどのような順で処理されるでしょうか？
 ```SQL
 SELECT
 	CATEGORY,
 	COUNT(*) AS PRODUCT_COUNT
 FROM
-	PRODUCTS_MST
+	SAMPLE_PRODUCTS
 WHERE
 	STOCK_QUANTITY >= 100
 GROUP BY
@@ -192,7 +197,7 @@ HAVING
 > 
 > | product_id | category       | product_name             | price    | stock_quantity | memo                                 | deleted_at |
 > | ---------- | -------------- | ------------------------ | -------- | -------------- | ------------------------------------ | ---------- |
-> | 1          | Electronics    | null                     | 3500.00  | 0              | null                                 | null       |
+> | 1          | Electronics    | ワイヤレス充電器         | 3500.00  | 0              | null                                 | null       |
 > | 2          | Electronics    | ワイヤレスイヤホン       | 12800.00 | 150            | 高音質でノイズキャンセリング機能付き | null       |
 > | 3          | Books          | SQL 入門                 | 2500.00  | 200            | null                                 | null       |
 > | 4          | Home & Kitchen | 電気ケトル               | 4500.00  | 10             | 1L 容量、自動電源オフ機能            | null       |
