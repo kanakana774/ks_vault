@@ -81,9 +81,8 @@ COMMIT;
 
 **なぜ待つのか。** `UPDATE` は対象の行に**行ロック**を自動的に取ります。ロックは**トランザクションが終わる（`COMMIT` か `ROLLBACK`）まで**保持されます。窓Bは「窓Aのトランザクションが終わるのを待つ」しかありません。
 
-> **ここが「`COMMIT` を忘れる」ことの本当の怖さです。**
-> 自動コミットが off のツールで `UPDATE` を打ったまま放置すると、**その行を触ろうとする全員が止まります。** 昼休みに戻ってきたら障害になっていた、という事故はこれです。
-
+> **ここが「`COMMIT` を忘れる」ことの怖さです。**
+> 自動コミットが off のツールで `UPDATE` を打ったまま放置すると、**その行を触ろうとする全員が止まります。** 
 ### 1-2. 待たされた側は、どの値を読み直すのか
 
 `COMMIT` 後、価格を確認します。
@@ -99,17 +98,22 @@ SELECT price FROM products WHERE product_id = 1;
 ```
 
 **1200 → +100（窓A）→ +50（窓B）＝ 1350 です。** 窓Bが「自分が待ち始めた時点の 1200」に 50 を足して 1250 になったりはしません。
-
 これが既定の分離レベル **READ COMMITTED** の重要な性質です。**待たされた `UPDATE` は、ロックが外れた後に対象行を読み直してから実行されます。**
 
 > ⚠️ **これは `price = price + 50` のように「今の値を元に計算する」書き方だから正しく動いています。**
 > アプリ側で `SELECT` して値を受け取り、計算した結果を `UPDATE price = 1250` のように**絶対値で書き戻す**と、この保護は効きません。そこで起きるのが次の §4 の**ロストアップデート**です。
-
 ### 1-3. 誰が誰を待っているのかを調べる
+
+**もう一度 1-1 と同じ状況を作ります。** 今度は窓Aで `COMMIT` せず、**3つ目の窓C**を新しく開いて調査します。
+
+1. **窓A**：`BEGIN;` → `UPDATE products SET price = price + 100 WHERE product_id = 1;`（`COMMIT` はまだ打たない）
+2. **窓B**：同じ行を `UPDATE`（→ 返ってこないまま止まる）
+3. **窓C**（新規に開く）：ここから下のクエリを実行する
 
 「処理が固まった」ときに原因を特定するためのクエリです。**実務で最も使う1本**なので、書き写しておいてください。
 
 ```sql
+-- 窓C
 SELECT pid,
        pg_blocking_pids(pid) AS 待たせている相手,
        wait_event_type       AS 待ちの種類,
@@ -118,29 +122,33 @@ FROM pg_stat_activity
 WHERE cardinality(pg_blocking_pids(pid)) > 0;
 ```
 
-実測の出力：
-
 ```
   pid  | 待たせている相手 | 待ちの種類 |                 実行中のSQL
 -------+------------------+------------+---------------------------------------------
  23380 | {9452}           | Lock       | UPDATE products SET price = price + 1 WHERE
 ```
 
-**「PID 23380 は、PID 9452 に待たされている」**と読みます。犯人が分かったら、その接続が何をしているかを確認します。
+**「PID 23380 は、PID 9452 に待たされている」**と読みます。
 
-```sql
-SELECT pid, state, xact_start, left(query, 80)
-FROM pg_stat_activity WHERE pid = 9452;
-```
-
-どうしても止められないときは、最終手段として接続を切ります。
-
-```sql
-SELECT pg_cancel_backend(9452);     -- 実行中のクエリだけキャンセル（穏当）
-SELECT pg_terminate_backend(9452);  -- 接続ごと切断（トランザクションはロールバックされる）
-```
-
+> [!example]- 犯人の詳細確認・止められない場合の強制切断
+> 犯人が分かったら、その接続が何をしているかを確認します。
+>
+> ```sql
+> -- 窓C
+> SELECT pid, state, xact_start, left(query, 80)
+> FROM pg_stat_activity WHERE pid = 9452;
+> ```
+>
+> どうしても止められないときは、最終手段として接続を切ります。
+>
+> ```sql
+> SELECT pg_cancel_backend(9452);     -- 実行中のクエリだけキャンセル（穏当）
+> SELECT pg_terminate_backend(9452);  -- 接続ごと切断（トランザクションはロールバックされる）
+> ```
+>
 > ⚠️ `pg_terminate_backend` は**他人の処理を強制終了させるコマンド**です。本番で実行する前に、必ずその接続が何をしているか確認し、可能なら持ち主に連絡してください。
+
+最後は**窓A**で `COMMIT;`（または `ROLLBACK;`）して締めます。
 
 ---
 
@@ -170,11 +178,8 @@ SELECT price FROM products WHERE product_id = 1;
 ```
 
 **待たされません。実測 0.917ミリ秒で返ってきます。** そして返ってくるのは、**窓Aが書き換える前の 1200.00** です。
-
 窓Aが `COMMIT` した後にもう一度読むと、今度は 120 が返ります。
-
 **これが MVCC（Multi-Version Concurrency Control、多版型同時実行制御）です。**
-
 ### 2-2. なぜ古い値が読めるのか
 
 PostgreSQL は `UPDATE` のとき、**元の行を上書きしません。** 新しい内容の行を**別に追加**し、「古い行はいつまで有効か」「新しい行はいつから有効か」という情報を各行に持たせています。
@@ -191,6 +196,8 @@ PostgreSQL は `UPDATE` のとき、**元の行を上書きしません。** 新
 
 **「読み取りと書き込みが互いにブロックしない」——これが PostgreSQL の同時実行性能の土台**です。
 
+![[15-2_MVCCのバージョン分岐.excalidraw]]
+
 ### 2-3. MVCC の代償
 
 いいことばかりではありません。**古いバージョンの行がディスクに溜まり続けます。**
@@ -206,7 +213,7 @@ PostgreSQL は `UPDATE` のとき、**元の行を上書きしません。** 新
 
 ## 3. 分離レベル
 
-### 3-1. 同時実行で起きうる3つの現象
+### 3-1. 分離レベルの一覧：標準とPostgreSQLの実際
 
 複数のトランザクションが同時に動くと、次のような「読み取りのおかしさ」が起こりえます。
 
@@ -216,78 +223,7 @@ PostgreSQL は `UPDATE` のとき、**元の行を上書きしません。** 新
 | **ノンリピータブルリード** | 同じ行を2回読んだら、**値が変わっていた**（他が `UPDATE` して `COMMIT` した） |
 | **ファントムリード** | 同じ条件で2回読んだら、**行が増えていた**（他が `INSERT` して `COMMIT` した） |
 
-どこまで許容するかを決めるのが**分離レベル**です。
-
-### 3-2. PostgreSQL の分離レベルは実質3つ
-
-SQL標準では4段階が定義されていますが、**PostgreSQL の実際の挙動は標準の表とは違います。** ここは誤解が多いので、実測で確かめます。
-
-まず `READ UNCOMMITTED` を指定してみます。**窓A**で更新して止め、
-
-```sql
--- 窓A
-BEGIN;
-UPDATE products SET price = 9999 WHERE product_id = 1;
-```
-
-**窓B**で、いちばん緩い分離レベルを明示して読みます。
-
-```sql
--- 窓B
-BEGIN TRANSACTION ISOLATION LEVEL READ UNCOMMITTED;
-SHOW transaction_isolation;
-SELECT price FROM products WHERE product_id = 1;
-COMMIT;
-```
-
-```
- transaction_isolation
------------------------
- read uncommitted
-
-  price
----------
- 1200.00
-```
-
-**指定は受け付けられている（`read uncommitted` と表示される）のに、未確定の 9999 は見えません。**
-
-**PostgreSQL には READ UNCOMMITTED が実装されていません。** 指定してもエラーにはならず、**READ COMMITTED として動きます**。つまり **PostgreSQL でダーティリードは起こせません。**
-
-### 3-3. 【2窓】READ COMMITTED と REPEATABLE READ を比べる
-
-残り3つのうち、実務で出会う2つを比べます。**窓A**を長めのトランザクションにして、その途中で**窓B**が更新と挿入を行います。
-
-```sql
--- 窓A（分離レベルを変えて2回試す）
-BEGIN TRANSACTION ISOLATION LEVEL READ COMMITTED;   -- 2回目は REPEATABLE READ に変える
-SELECT price FROM products WHERE product_id = 1;           -- ① 1回目の読み取り
--- ここで窓Bを実行する
-SELECT price FROM products WHERE product_id = 1;           -- ② 2回目の読み取り
-SELECT count(*) FROM products WHERE category_id = 1;       -- ③ 件数
-COMMIT;
-```
-
-```sql
--- 窓B（窓Aの①と②の間に実行する）
-UPDATE products SET price = 1300 WHERE product_id = 1;
-INSERT INTO products (product_id, product_name, category_id, price)
-VALUES (900, 'Ghost', 1, 1);
-```
-
-実測結果：
-
-| 窓Aの分離レベル | ① 1回目 | ② 2回目 | ③ 件数 |
-| :--- | ---: | ---: | ---: |
-| **READ COMMITTED**（既定） | 1200.00 | **1300.00** | **5** |
-| **REPEATABLE READ** | 1200.00 | **1200.00** | **4** |
-
-- **READ COMMITTED** は、②で値が変わり（ノンリピータブルリード）、③で行が増えています（ファントムリード）。**他がコミットするたびに、見える世界が更新される**からです。
-- **REPEATABLE READ** は、トランザクション開始時のスナップショットを最後まで使うので、**②も③も最初と同じ**です。
-
-### 3-4. 標準の表をそのまま覚えないこと
-
-よく載っている「SQL標準の分離レベル表」と、PostgreSQL の実際は次のように違います。
+どこまで許容するかを決めるのが**分離レベル**です。SQL標準は4段階を定義していますが、**PostgreSQL の実際の挙動は標準の表とは違います。** ここは誤解が多いので、はじめに正しい表を出します。
 
 | 分離レベル | ダーティリード | ノンリピータブルリード | ファントムリード | PostgreSQL での実際 |
 | :--- | :---: | :---: | :---: | :--- |
@@ -296,12 +232,77 @@ VALUES (900, 'Ghost', 1, 1);
 | Repeatable Read | 防ぐ | 防ぐ | 標準では発生 | **ファントムも防ぐ**（標準より強い） |
 | Serializable | 防ぐ | 防ぐ | 防ぐ | 標準どおり＋直列化異常も防ぐ |
 
-**覚えるべきは2点です。**
+**覚えるべきは2点だけです。**
 
-1. **PostgreSQL でダーティリードは起きない**（Read Uncommitted が無い）
-2. **PostgreSQL の Repeatable Read はファントムも防ぐ**（スナップショットを固定するため）
+1. **PostgreSQL でダーティリードは起きない**（Read Uncommitted が実装されておらず、指定してもエラーにはならず Read Committed として動く）
+2. **PostgreSQL の Repeatable Read はファントムも防ぐ**（スナップショットを固定するため、標準より強い）
 
-### 3-5. REPEATABLE READ 以上は「失敗する」ことがある
+> [!example]- 手を動かして確かめる（READ UNCOMMITTED を指定しても効かないこと）
+> **窓A**で更新して止めます。
+>
+> ```sql
+> -- 窓A
+> BEGIN;
+> UPDATE products SET price = 9999 WHERE product_id = 1;
+> ```
+>
+> **窓B**で、いちばん緩い分離レベルを明示して読みます。
+>
+> ```sql
+> -- 窓B
+> BEGIN TRANSACTION ISOLATION LEVEL READ UNCOMMITTED;
+> SHOW transaction_isolation;
+> SELECT price FROM products WHERE product_id = 1;
+> COMMIT;
+> ```
+>
+> ```
+>  transaction_isolation
+> -----------------------
+>  read uncommitted
+>
+>   price
+> ---------
+>  1200.00
+> ```
+>
+> **指定は受け付けられている（`read uncommitted` と表示される）のに、未確定の 9999 は見えません。** PostgreSQL には READ UNCOMMITTED が実装されていないので、指定してもエラーにはならず、そのまま READ COMMITTED として動きます。
+
+### 3-2. READ COMMITTED と REPEATABLE READ の挙動差
+
+実務で出会う2つを比べると、**READ COMMITTED** は他がコミットするたびに見える世界が更新され（ノンリピータブルリード・ファントムリード）、**REPEATABLE READ** はトランザクション開始時のスナップショットを最後まで使うので、2回目に読んでも最初と同じ結果になります。
+
+実測結果：
+
+| 窓Aの分離レベル | ① 1回目 | ② 2回目 | ③ 件数 |
+| :--- | ---: | ---: | ---: |
+| **READ COMMITTED**（既定） | 1200.00 | **1300.00** | **5** |
+| **REPEATABLE READ** | 1200.00 | **1200.00** | **4** |
+
+> [!example]- 手を動かして確かめる（2窓での再現手順）
+> **窓A**を長めのトランザクションにして、その途中で**窓B**が更新と挿入を行います。
+>
+> ```sql
+> -- 窓A（分離レベルを変えて2回試す）
+> BEGIN TRANSACTION ISOLATION LEVEL READ COMMITTED;   -- 2回目は REPEATABLE READ に変える
+> SELECT price FROM products WHERE product_id = 1;           -- ① 1回目の読み取り
+> -- ここで窓Bを実行する
+> SELECT price FROM products WHERE product_id = 1;           -- ② 2回目の読み取り
+> SELECT count(*) FROM products WHERE category_id = 1;       -- ③ 件数
+> COMMIT;
+> ```
+>
+> ```sql
+> -- 窓B（窓Aの①と②の間に実行する）
+> UPDATE products SET price = 1300 WHERE product_id = 1;
+> INSERT INTO products (product_id, product_name, category_id, price)
+> VALUES (900, 'Ghost', 1, 1);
+> ```
+>
+> - **READ COMMITTED** は、②で値が変わり（ノンリピータブルリード）、③で行が増えています（ファントムリード）。
+> - **REPEATABLE READ** は、②も③も最初と同じです。
+
+### 3-3. REPEATABLE READ 以上は「失敗する」ことがある
 
 強い分離レベルはタダではありません。**REPEATABLE READ 以上では、他と衝突したトランザクションがエラーで落とされます。**
 
@@ -314,7 +315,7 @@ ROLLBACK
 
 **待つのではなく、失敗します。** つまり **REPEATABLE READ / SERIALIZABLE を使うなら、アプリ側に「失敗したら最初からやり直す」リトライ処理が必須**です。これを書かずに分離レベルだけ上げると、繁忙時にエラーが多発します。
 
-### 3-6. どれを使えばいいか
+### 3-4. どれを使えばいいか
 
 **既定の READ COMMITTED のままでよい**、が答えです。理由は3つあります。
 
@@ -359,6 +360,15 @@ SELECT stock_quantity FROM inventory WHERE product_id=1 AND warehouse_id=1;   --
 UPDATE inventory SET stock_quantity = 47 WHERE product_id=1 AND warehouse_id=1;
 COMMIT;
 ```
+
+**実際に手元で再現するには、それぞれのブロックを1文ずつ交互に打ちます。**
+
+1. 窓A：`BEGIN;` → `SELECT`（50 を確認）
+2. 窓B：`BEGIN;` → `SELECT`（同じく 50 を確認）
+3. 窓A：`UPDATE ... SET stock_quantity = 45;` → `COMMIT;`
+4. 窓B：`UPDATE ... SET stock_quantity = 47;` → `COMMIT;`
+
+両方が「自分が読んだ 50」を元に計算済みの値を書き戻すだけなので、3と4の順番を逆にしても結果は同じ（＝どちらか一方の引いた分が消える）になります。
 
 実測結果：
 
@@ -457,7 +467,6 @@ FOR UPDATE SKIP LOCKED;
 ### 4-5. 【2窓】外部キーは、黙ってロックを取っている
 
 **`FOR SHARE` を自分で書く場面は、実はあまりありません。** なぜなら**PostgreSQL が必要な場面では自動で取っているから**です。
-
 代表例が**外部キー**です。子テーブルに行を挿入すると、**参照先の親行に自動的にロックが取られます。**
 
 **窓A**で、顧客6番を参照する注文を挿入します（`COMMIT` しません）。
@@ -499,12 +508,12 @@ DELETE FROM customers WHERE customer_id = 6;
 
 行ロックには強さの違う4段階があります。**暗記は不要ですが、`pg_locks` を見たときに読めるように**一覧にしておきます。強い順に：
 
-| モード | 取り方 | 何をブロックするか |
-| :--- | :--- | :--- |
-| `FOR UPDATE` | 明示的に書く／`DELETE` と**キー列を変える** `UPDATE` が自動で取る | 他のすべての行ロックと更新 |
-| `FOR NO KEY UPDATE` | **キー列を変えない** `UPDATE` が自動で取る | `FOR UPDATE` と `FOR SHARE` |
-| `FOR SHARE` | 明示的に書くときだけ | 更新・削除 |
-| `FOR KEY SHARE` | **FK 参照時に自動で取られる** | 削除とキー列の変更のみ |
+| モード                 | 取り方                                          | 何をブロックするか                  |
+| :------------------ | :------------------------------------------- | :------------------------- |
+| `FOR UPDATE`        | 明示的に書く／`DELETE` と**キー列を変える** `UPDATE` が自動で取る | 他のすべての行ロックと更新              |
+| `FOR NO KEY UPDATE` | **キー列を変えない** `UPDATE` が自動で取る                 | `FOR UPDATE` と `FOR SHARE` |
+| `FOR SHARE`         | 明示的に書くときだけ                                   | 更新・削除                      |
+| `FOR KEY SHARE`     | **FK 参照時に自動で取られる**                           | 削除とキー列の変更のみ                |
 
 ここでいう「キー列」とは、**主キーやユニーク制約に使われている列**のことです。§4-5 で住所の `UPDATE` が通ったのは、`city` がキー列ではないので `FOR NO KEY UPDATE` で済み、`FOR KEY SHARE` と衝突しなかったからです。
 
@@ -554,19 +563,18 @@ ROLLBACK
 
 ### 5-2. 検知の仕組み
 
-PostgreSQL は、ロック待ちが **`deadlock_timeout`（既定 1秒）**を超えたときだけ、デッドロックの有無を調べます。
+PostgreSQL は、ロック待ちが **`deadlock_timeout`（既定 1秒）**を超えたときだけ、デッドロックの有無を調べます。**毎回調べているわけではありません**（調べるコスト自体が高いため）。だから「1秒くらいは普通に待つ」のが正常な動作です。
 
-```sql
-SHOW deadlock_timeout;
-```
-
-```
- deadlock_timeout
-------------------
- 1s
-```
-
-**毎回調べているわけではありません**（調べるコスト自体が高いため）。だから「1秒くらいは普通に待つ」のが正常な動作です。
+> [!note]- `deadlock_timeout` の値を確認する
+> ```sql
+> SHOW deadlock_timeout;
+> ```
+>
+> ```
+>  deadlock_timeout
+> ------------------
+>  1s
+> ```
 
 ### 5-3. 対策：ロックを取る順番を揃える
 
