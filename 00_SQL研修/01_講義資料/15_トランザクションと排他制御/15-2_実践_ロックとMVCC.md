@@ -30,7 +30,22 @@
 SELECT pg_backend_pid();
 ```
 
-### 0-3. リセットSQL
+### 0-3. この章だけで使う列を1つ足す
+
+§4-3（楽観ロック）で使うので、`inventory` に **`version` という列を1つ**足しておきます。
+
+```sql
+ALTER TABLE inventory ADD COLUMN version INT NOT NULL DEFAULT 1;
+```
+
+**「その行が何回更新されたか」を数えるだけの列**です。業務的な意味は持ちません。なぜこんな列を足すのかは §4-3 で分かります。
+
+> 章が終わったら、次のSQLで元に戻せます（残しておいても他の章に影響はありません）。
+> ```sql
+> ALTER TABLE inventory DROP COLUMN version;
+> ```
+
+### 0-4. リセットSQL
 
 シナリオを試すと値が変わっていきます。**次のSQLを窓Aで実行すれば初期状態に戻ります**（トランザクションが開いたままなら、先に `ROLLBACK;` してください）。
 
@@ -39,7 +54,7 @@ ROLLBACK;   -- 開きっぱなしのトランザクションがあれば閉じ�
 
 UPDATE products  SET price = 1200.00 WHERE product_id = 1;
 UPDATE products  SET price =  800.00 WHERE product_id = 2;
-UPDATE inventory SET stock_quantity = 50 WHERE product_id = 1 AND warehouse_id = 1;
+UPDATE inventory SET stock_quantity = 50, version = 1 WHERE product_id = 1 AND warehouse_id = 1;
 ```
 
 ---
@@ -493,39 +508,49 @@ COMMIT;
 
 悲観ロックは「**先に押さえる**」やり方でした。もう一つ、「**押さえないが、書き戻すときに変わっていないか確かめる**」やり方があります。こちらを **楽観ロック（optimistic lock）** と呼びます。「**どうせめったにぶつからないだろう**」と楽観的に構えて、**ぶつかったときだけ気づいて対処する**考え方です。
 
-§4-1 とまったく同じ状況（在庫50・窓Aが5個・窓Bが3個）を、今度はこう書きます。
+**ここで §0-3 で足した `version` 列を使います。** 使い方は2つだけです。
+
+1. 更新するとき、**`version` も1つ増やす**
+2. 更新するとき、**「読んだときの `version` のままなら」という条件を付ける**
+
+§4-1 とまったく同じ状況（在庫50・窓Aが5個・窓Bが3個）を、こう書きます。
 
 ```sql
 -- 窓A
 BEGIN;
-SELECT stock_quantity FROM inventory WHERE product_id=1 AND warehouse_id=1;   -- 50 を読む
--- （アプリが 50-5=45 を計算）
-UPDATE inventory SET stock_quantity = 45
+SELECT stock_quantity, version FROM inventory WHERE product_id=1 AND warehouse_id=1;
+-- → 在庫 50、version 1 を読む。アプリが 50-5=45 を計算
+UPDATE inventory
+   SET stock_quantity = 45,
+       version = version + 1            -- ★ 更新したら version を進める
  WHERE product_id=1 AND warehouse_id=1
-   AND stock_quantity = 50;          -- ★ 「読んだときの値のままなら」という条件を足す
+   AND version = 1;                     -- ★ 読んだときの version のままなら
 COMMIT;
 ```
 
-窓Bも同じ形で、`SET stock_quantity = 47` ／ `AND stock_quantity = 50` と書きます。
+窓Bも同じ形で、`SET stock_quantity = 47` と書きます（`AND version = 1` は同じ）。
 
 **手順は §4-1 と同じく1文ずつ交互に打ちます。**
 
-1. 窓A：`BEGIN;` → `SELECT`（50 を確認）
-2. 窓B：`BEGIN;` → `SELECT`（同じく 50 を確認）
-3. 窓A：`UPDATE ... AND stock_quantity = 50;` → `COMMIT;`
-4. 窓B：`UPDATE ... AND stock_quantity = 50;` → `COMMIT;`
+1. 窓A：`BEGIN;` → `SELECT`（在庫50 / version 1 を確認）
+2. 窓B：`BEGIN;` → `SELECT`（同じく 50 / 1 を確認）
+3. 窓A：`UPDATE ... AND version = 1;` → `COMMIT;`
+4. 窓B：`UPDATE ... AND version = 1;` → `COMMIT;`
 
 実測結果：
 
 ```
 窓A : UPDATE 1
-窓B : UPDATE 0      ← 2,629ミリ秒待たされたのち、0件
-最終的な在庫: 45
+窓B : UPDATE 0      ← 2,901ミリ秒待たされたのち、0件
+
+ stock_quantity | version
+----------------+---------
+             45 |       2
 ```
 
 **窓Bは失敗しました。しかもエラーは出ていません。**返ってきたのは **`UPDATE 0`**——「0行を更新しました」というだけです。
 
-**なぜ0件になるのか。§1-2 がそのまま効いています。** 待たされた `UPDATE` は、ロックが外れた後に**対象行を読み直してから**実行されます。読み直した行の `stock_quantity` はもう 45 なので、`AND stock_quantity = 50` という条件に合わなくなり、**更新対象が1行も無くなります。**
+**なぜ0件になるのか。§1-2 がそのまま効いています。** 待たされた `UPDATE` は、ロックが外れた後に**対象行を読み直してから**実行されます。読み直した行の `version` はもう `2` なので、`AND version = 1` という条件に合わなくなり、**更新対象が1行も無くなります。**
 
 §1-2 では「読み直すおかげで正しく計算される」仕組みでした。ここでは同じ仕組みが、**「他人に書き換えられたことを検知する装置」**として働いています。
 
@@ -534,35 +559,37 @@ COMMIT;
 >
 > ```sql
 > -- 窓B（やり直し）
-> SELECT stock_quantity FROM inventory WHERE product_id=1 AND warehouse_id=1;   -- 今度は 45
-> -- （アプリが 45-3=42 を計算）
-> UPDATE inventory SET stock_quantity = 42
+> SELECT stock_quantity, version FROM inventory WHERE product_id=1 AND warehouse_id=1;
+> -- → 今度は 在庫45 / version 2。アプリが 45-3=42 を計算
+> UPDATE inventory
+>    SET stock_quantity = 42,
+>        version = version + 1
 >  WHERE product_id=1 AND warehouse_id=1
->    AND stock_quantity = 45;
+>    AND version = 2;                    -- 読み直した version を条件にする
 > ```
 >
 > 実測：
 >
 > ```
->  stock_quantity
-> ----------------
->              45
+>  stock_quantity | version
+> ----------------+---------
+>              45 |       2
 >
 > UPDATE 1
 >
->  stock_quantity
-> ----------------
->              42
+>  stock_quantity | version
+> ----------------+---------
+>              42 |       3
 > ```
 >
-> **42 になりました。**「失敗を検知して、最初からやり直す」——これが**リトライ**です。
+> **42 になりました。**「失敗を検知して、読み直して、もう一度やる」——これが**リトライ**です。
 
 > ⚠️ **`UPDATE 0` を見ていないコードは、楽観ロックを書いていないのと同じです。**
 > `UPDATE` が0件でも**例外は飛びません。** アプリから SQL を実行すると、たいていのライブラリは**更新件数を数値で返します。** この戻り値を捨てているコードは、「先に他人が更新していた」ことに永久に気づけません。
 
-> 💡 **実務では、業務の値ではなく専用の `version` 列を1本足します。**
-> `WHERE version = 読んだ値` ＋ `SET version = version + 1` とすれば、どの列を更新する処理でも同じ形で書けます。
-> （この資料では8章のテーブルに列を足せないので、在庫の値そのものを条件にしています）
+> 💡 **なぜ `stock_quantity` そのものを条件にしないのか。**
+> `AND stock_quantity = 50` でも同じように検知できそうに見えますが、**「50 → 45 → 50」と誰かが戻した場合を見逃します。** 値が同じに戻っていれば条件が成立してしまうからです。
+> **`version` は増える一方**なので、戻ることがありません。だから専用の列を1本用意します。**どの列を更新する処理でも同じ形で書ける**、という利点もあります。
 
 > [!note]- フレームワークが用意していることもあります
 > この `version` 列のパターンはあまりに定番なので、**フレームワーク側が自動化していることがあります。**
@@ -571,9 +598,8 @@ COMMIT;
 >
 > **中で起きていることは、いま手で書いたものとまったく同じです。** 「フレームワークが勝手にやってくれる魔法」ではなく、「この SQL を代わりに組み立ててくれている」と分かっていれば、動かないときに追いかけられます。
 
-> ⚠️ **注意が2つあります。**
-> 1. **「楽観ロック＝待たない」ではありません。** 同じ行の `UPDATE` 同士は、やはりぶつかって待ちます。楽観ロックが無くせるのは「**読んでから書き戻すまでの間**」のロック——つまり**人が画面を開いている時間**です。`UPDATE` 一瞬ぶんのロックは無くなりません。
-> 2. **業務の値を条件にすると「50 → 45 → 50」と戻された場合を見逃します。** 値が同じに戻っていれば条件は成立してしまいます。これが「専用の `version` 列を使う」もう一つの理由です。
+> ⚠️ **「楽観ロック＝待たない」ではありません。**
+> 同じ行の `UPDATE` 同士は、やはりぶつかって待ちます（実測でも 2,901ミリ秒待っています）。楽観ロックが無くせるのは「**読んでから書き戻すまでの間**」のロック——つまり**人が画面を開いている時間**です。`UPDATE` 一瞬ぶんのロックは無くなりません。
 
 ### 4-4. 書き戻しパターンの3分類：どれを選ぶか
 
@@ -581,7 +607,7 @@ COMMIT;
 
 | | ① DB側で計算する1文 | ② 悲観ロック | ③ 楽観ロック |
 | :--- | :--- | :--- | :--- |
-| 書き方 | `SET stock = stock - 5`<br>`WHERE ... AND stock >= 5` | `SELECT ... FOR UPDATE`<br>→ 計算 → `UPDATE` | `SELECT` → 計算 →<br>`UPDATE ... WHERE 読んだ値` |
+| 書き方 | `SET stock = stock - 5`<br>`WHERE ... AND stock >= 5` | `SELECT ... FOR UPDATE`<br>→ 計算 → `UPDATE` | `SELECT`（version も）→ 計算 →<br>`UPDATE ... AND version = 読んだ値` |
 | 競合したら | 待って、読み直して実行 | **待つ** | **待たずに0件で返る** |
 | 失敗の受け取り方 | 更新0件 | （失敗しない） | 更新0件 |
 | 向いている場面 | 判断まで `WHERE` に書ける | 読んでから書くまでが**一瞬** | 読んでから書くまでに<br>**人や外部が挟まる** |
@@ -648,12 +674,6 @@ COMMIT;
 - **`FOR SHARE`（共有）** … 「この行を参照するので、**変更はさせない**。でも**同じように参照したいだけの人となら共存してよい**」
 
 実測で確かめると：
-
-```
- product_id
-------------
-          3
-```
 
 | 窓Aが `FOR SHARE` 中に、窓Bが… | 結果 |
 | :--- | :--- |
@@ -794,7 +814,7 @@ SELECT * FROM products WHERE product_id IN (5, 2, 9) ORDER BY product_id FOR UPD
 
 ここまでの章は、すべて**「トランザクションが長い」ことから起きる問題**でした。最後に、**どこからどこまでを1つのトランザクションにするか**——境界の決め方を整理します。
 
-[[15-1_導入_トランザクションとACID|15-1]] §3-2 で、境界の基準を1つだけ挙げました——「**業務として一緒に無かったことにしたい範囲**」。そこでは保留にした「**では大きすぎると何が困るのか**」に、ここで答えます。
+[[15-1_導入_トランザクションとACID|15-1]] §3-1 で、境界の基準を1つだけ挙げました——「**業務として一緒に無かったことにしたい範囲**」。そこでは保留にした「**では大きすぎると何が困るのか**」に、ここで答えます。
 
 ### 6-1. 境界とは「一緒に無かったことにできる範囲」
 
