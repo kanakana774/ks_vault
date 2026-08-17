@@ -1,8 +1,9 @@
 {
   "theme": "moonstone",
   "enabledCssSnippets": [],
-  "cssTheme": "Light & Bright",
+  "cssTheme": "AnuPpuccin",
   "showViewHeader": true,
   "showRibbon": false,
-  "baseFontSizeAction": false
+  "baseFontSizeAction": false,
+  "accentColor": ""
 }
