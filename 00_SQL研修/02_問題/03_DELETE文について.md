@@ -17,7 +17,7 @@
 ここに解答を記入
 ```
 
-> **補足**: 実務では物理削除を行わず、`deleted_at` に日時を入れる「論理削除」を行うのが一般的です。
+> **参考**: 実務では物理削除を行わず、`deleted_at` に日時を入れる「論理削除」を行うのが一般的です。
 
 ---
 
@@ -28,7 +28,6 @@
 `products_mst` テーブルから、在庫数(`stock_quantity`)が **0 個** の商品を全て削除してください。
 
 ### 解答:
-
 ```sql
 ここに解答を記入
 ```
@@ -42,7 +41,6 @@
 `products_mst` テーブルから、カテゴリ(`category`)が **'Food'** の全ての商品を削除してください。
 
 ### 解答:
-
 ```sql
 ここに解答を記入
 ```
@@ -55,9 +53,9 @@
 ### 問題:
 `customers_mst` テーブルから、**2023年3月1日より前** に登録された顧客の情報を削除してください。
 
-### 解答:
-顧客(`customers_mst`)を消すには、その顧客の注文(`orders_trn`)を消す必要があり、注文を消すには注文明細(`order_details_trn`)を消す必要があります。
+> **ヒント**: 顧客(`customers_mst`)を消すには、その顧客の注文(`orders_trn`)を消す必要があり、注文を消すには注文明細(`order_details_trn`)を消す必要があります。
 
+### 解答:
 ```sql
 ここに解答を記入
 ```
@@ -71,7 +69,6 @@
 `products_mst` テーブルから、メモ(`memo`)が **NULL** である商品を全て削除してください。
 
 ### 解答:
-
 ```sql
 ここに解答を記入
 ```
@@ -88,12 +85,11 @@
 3. この顧客の「顧客情報」
 
 ### 解答:
-
 ```sql
 ここに解答を記入
 ```
 
-> **補足**: `ON DELETE CASCADE` オプションが設定されているテーブルであれば、親を消すだけで子も自動で消えますが、危険な操作になりうるため、意図して手動削除を行うケースも多々あります。
+> **参考**: `ON DELETE CASCADE` オプションが設定されているテーブルであれば、親を消すだけで子も自動で消えますが、危険な操作になりうるため、意図して手動削除を行うケースも多々あります。
 
 ---
 
@@ -105,7 +101,91 @@
 ※実務環境では絶対に行わないでください。
 
 ### 解答:
-
 ```sql
 ここに解答を記入
+```
+
+---
+
+# 追加課題
+---
+
+> **注意**: この章の追加問題は物理削除を行います。各問の末尾にある復旧SQLを必ず実行してください（04章・06章・07章の期待結果はこのデータが揃っている前提です）。
+
+## 追加問題 1: 消す前に「参照されているか」を確かめる
+- **目的**: `DELETE ... RETURNING` で削除した行の内容を証跡として取得しつつ、「参照されていない行は消せる／参照されている行は消せない」の違いから、なぜ実務が論理削除を選ぶのかを説明できるようにする。
+
+### 問題:
+商品マスタの棚卸しで、重複登録が2件見つかりました。
+
+- `product_id = 20`: 商品名が `' 国産はちみつ '` と前後に空白付きで登録されており、`product_id = 15` と実質同じ商品
+- `product_id = 19`: 商品名が `'SQL 入門'` で、`product_id = 2` と同名の二重登録
+
+**(1)** `product_id = 20` を物理削除してください。その際、**削除した行の内容を `RETURNING` で出力** してください。
+
+**(2)** 同じやり方で `product_id = 19` を削除してください。何が起きますか。エラーメッセージを読み、原因を説明してください。
+
+**(3)** (2) を成功させる手順を書いてください。ただし、**その手順を実行すると業務上どんな情報が失われるか** も答えてください。
+
+**(4)** この2件は、それぞれ物理削除・論理削除のどちらで処理すべきでしょうか。理由とともに述べてください。
+
+> **ヒント**: エラーメッセージの `DETAIL:` 行には、どのテーブルのどのキーが参照しているかが必ず書かれています。
+
+### 解答:
+```sql
+ここに解答を記入
+```
+
+**復旧SQL（解き終えたら必ず実行）**
+```sql
+INSERT INTO products_mst (product_id, category, product_name, price, stock_quantity, memo, deleted_at)
+VALUES (19, 'Books', 'SQL 入門', 2500.00, 60, '改訂版として誤って二重登録', NULL),
+       (20, 'Food', ' 国産はちみつ ', 1200.00, 30, NULL, NULL);
+
+INSERT INTO order_details_trn (order_id, product_id, quantity, deleted_at)
+VALUES (16, 19, 1, NULL);
+
+SELECT setval('products_mst_product_id_seq', (SELECT MAX(product_id) FROM products_mst));
+
+-- 検証: products_mst が 23 件、order_details_trn が 28 件に戻っていること
+SELECT COUNT(*) AS products FROM products_mst;
+SELECT COUNT(*) AS details  FROM order_details_trn;
+```
+
+---
+
+## 追加問題 2: 論理削除済みデータの一掃（パージ）
+- **目的**: `deleted_at IS NOT NULL` を削除条件にして「論理削除済みの行を物理的に消す定期バッチ」を、親子関係の順序を守って書けるようにする。
+
+### 問題:
+「キャンセル済みの注文を、DBから完全に削除してほしい」という依頼を受けました。
+
+**(1)** まず削除対象を確認します。`orders_trn` と `order_details_trn` に、論理削除済み（`deleted_at` が入っている）の行はそれぞれ何件ありますか。
+
+**(2)** いきなり `DELETE FROM orders_trn WHERE deleted_at IS NOT NULL;` を実行するとどうなりますか。
+
+**(3)** 正しい順序でパージ（物理削除）を実行してください。
+
+**(4)** パージ後、`customer_id = 6`（高橋 明）の注文は何件になりますか。またこの顧客は、注文履歴のうえで `customer_id = 9`（伊藤 さやか）とどう区別がつかなくなりますか。それはなぜ問題なのでしょうか。
+
+### 解答:
+```sql
+ここに解答を記入
+```
+
+**復旧SQL（解き終えたら必ず実行）**
+```sql
+INSERT INTO orders_trn (order_id, customer_id, order_date, deleted_at)
+VALUES (9,  6, '2023-09-01', '2023-09-02 11:30:00+0900'),
+       (18, 7, '2024-09-03', '2024-09-04 09:15:00+0900');
+
+INSERT INTO order_details_trn (order_id, product_id, quantity, deleted_at)
+VALUES (9,  13, 1, '2023-09-02 11:30:00+0900'),
+       (18, 17, 1, '2024-09-04 09:15:00+0900');
+
+SELECT setval('orders_trn_order_id_seq', (SELECT MAX(order_id) FROM orders_trn));
+
+-- 検証: orders_trn が 18 件、order_details_trn が 28 件に戻っていること
+SELECT COUNT(*) AS orders  FROM orders_trn;
+SELECT COUNT(*) AS details FROM order_details_trn;
 ```
