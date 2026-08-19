@@ -88,7 +88,8 @@ ROLLBACK
 > **`current transaction is aborted` を見たら、原因は「もっと前で起きた最初のエラー」です。** 遡って探してください。
 > 復旧は `ROLLBACK;`。**途中まで活かしたいなら `SAVEPOINT`（→ §4）。**
 
-> 🐘 **この挙動は PostgreSQL 固有です。** Oracle や MySQL では、エラーが出た**その文だけ**が失敗し、トランザクションは続行できます。
+> 🐘 **この挙動は PostgreSQL 固有です。** Oracle や MySQL では**失敗した文だけ**が取り消され、トランザクションは生きたまま続きます。上の例なら `SELECT 'この行は実行されるか?'` も実行され、**`COMMIT` すれば `UPDATE` が確定します。**
+> **同じSQLを流しても、DBによって残るものが違う**ということです。
 
 ---
 
@@ -120,7 +121,17 @@ ROLLBACK
 **`COMMIT` 時ではなく、その文の直後**に検査されます（破ればその場でエラー → 中断状態）。
 
 > [!note]- 例外：`DEFERRABLE` 制約
-> `DEFERRABLE INITIALLY DEFERRED` を付けると `COMMIT` 直前まで検査を遅らせられます。相互参照するテーブルへ同時に挿入する場合などに使います。**そういう逃げ道があるとだけ知っておけば十分です。**
+> **DDL で制約に付ける属性**です。
+> ```sql
+> ALTER TABLE order_details
+>   ADD CONSTRAINT fk_order FOREIGN KEY (order_id) REFERENCES orders(order_id)
+>   DEFERRABLE INITIALLY DEFERRED;      -- 検査を COMMIT 直前まで遅らせる
+> ```
+> - 付けられるのは **`UNIQUE` / `PRIMARY KEY` / `FOREIGN KEY` / `EXCLUDE` だけ。`CHECK` と `NOT NULL` には付きません**
+> - `INITIALLY IMMEDIATE` で作っておき、必要なときだけ `SET CONSTRAINTS ALL DEFERRED;` で遅らせることもできます
+> - 出番は、**互いを参照し合うテーブルへ同時に挿入する**とき（どちらを先に入れても相手がまだ居ない）や、`UPDATE ranks SET rank = rank + 1` のように**途中で一時的に重複が起きる**とき
+>
+> **そういう逃げ道があるとだけ知っておけば十分です。**
 
 **どこまで制約にして、どこからアプリで守るか。**「在庫はマイナスにしない」は `CHECK (stock_quantity >= 0)` で書けます。
 
@@ -170,9 +181,9 @@ COMMIT;
 ### 注意と、実務での立ち位置
 
 - **1トランザクション内で64個を超えると性能が落ちます。** ループで1件ごとに置かないこと
-- **PL/pgSQL の `BEGIN ... EXCEPTION` は裏でセーブポイントを作っています**（→ [[15-3_補足_PLpgSQLの中のトランザクション制御|15-3]]）
+- **PL/pgSQL の `BEGIN ... EXCEPTION` は裏でセーブポイントを作っています**
 
-**自分でコードに書くことは、ほとんどありません。** 一番よく出会うのは上の PL/pgSQL の暗黙のものです。
+**`SAVEPOINT` を自分でコードに書くことは、ほとんどありません。** 一番よく出会うのは、上の PL/pgSQL の暗黙のものです。
 
 **そして用途を誤解しやすいので1点だけ：**
 
