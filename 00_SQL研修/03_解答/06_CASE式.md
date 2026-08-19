@@ -1,5 +1,43 @@
+# 06章 演習 解答：CASE式
+
+**PostgreSQL 17 で実際に動かした結果を載せています。** 使用するテーブルは02章で作成した `products_mst` / `customers_mst` / `orders_trn` です。
+
+---
+
+## 準備
+
+### 使用するテーブル
+02章で作成した `products_mst` / `customers_mst` / `orders_trn` をそのまま使います。
+
+### リセットSQL
+問題 9 は `UPDATE` で `products_mst` の `memo` を書き換えます。`BEGIN;` … `ROLLBACK;` で囲まずに実行してしまった場合は、次のSQLで元の状態に戻してください。
+
+```sql
+UPDATE products_mst SET memo = 'スムージー作りに最適'      WHERE product_id = 7;
+UPDATE products_mst SET memo = '知育玩具・対象年齢3歳から' WHERE product_id = 17;
+UPDATE products_mst SET memo = NULL                        WHERE product_id = 18;
+UPDATE products_mst SET memo = NULL                        WHERE product_id = 20;
+UPDATE products_mst SET memo = 'ギフト包装対応'            WHERE product_id = 23;
+```
+
+戻ったかどうかは次のSQLで確認します。`memo` が未入力の商品が 7 件（`product_id` = 2, 6, 11, 18, 20, 21, 22）になっていればOKです。
+
+```sql
+SELECT
+    product_id,
+    product_name
+FROM
+    products_mst
+WHERE
+    memo IS NULL
+ORDER BY
+    product_id;
+```
+
+---
+
 ## 問題 1: 商品の価格帯を分類する（検索CASE式）
-- **目的**: 検索CASE式（CASE WHEN ...）を使用して、数値データ（価格）を基に新しいカテゴリ文字列を作成して表示する方法を理解する。
+- **目的**: 検索CASE式（`CASE WHEN ...`）を使用して、数値データ（価格）を基に新しいカテゴリ文字列を作成して表示する方法を理解する。
 
 ### 問題:
 `products_mst` テーブルから、各商品の **価格帯** を以下の基準で分類し、「商品名」「価格」「分類された価格帯（price_category）」を表示してください。
@@ -23,7 +61,9 @@ FROM
 ORDER BY
     price DESC;
 ```
-> **解説**: CASE式は上から順に評価され、最初に真(True)になった条件が適用されます。
+
+### 解説:
+CASE式は上から順に評価され、最初に真(True)になった条件が適用されます。そのため2番目の `WHEN price >= 5000` に「20,000円未満」という条件を書く必要はありません（20,000円以上の行は1番目の枝で確定済みのため）。
 
 ---
 
@@ -55,11 +95,13 @@ ORDER BY
     created_date ASC;
 ```
 
+### 解説:
+`BETWEEN A AND B` は両端を含みます。今回のデータは9人全員が3つの区分のいずれかに入るため `その他` は0件ですが、2023年より前の登録日が現れたときに黙って別の区分へ混ざらないよう、`ELSE 'その他'` で受け止めておくのが安全です。
+
 ---
 
 ## 問題 3: 商品カテゴリごとの在庫状況を評価する（クロス集計の基礎）
-- **目的**: `COUNT(CASE ... END)` というテクニックを使い、条件に応じた件数を数える方法（いわゆるピボット/クロス集計）を学ぶ。
-  ※少し応用的な内容ですが、レポート作成で非常によく使います。
+- **目的**: `COUNT(CASE ... END)` を使い、条件に応じた件数を横並びに集計する（ピボット／クロス集計の）方法を習得する。
 
 ### 問題:
 `products_mst` テーブルから、 **カテゴリごと** に以下の在庫状況別の商品数を集計して表示してください。
@@ -85,7 +127,9 @@ GROUP BY
 ORDER BY
     category;
 ```
-> **解説**: `COUNT` 関数は `NULL` を無視します。CASE式で `ELSE` を省略すると、条件に合わない場合は `NULL` が返るため、条件に合った行だけが「1」となり、結果としてその件数がカウントされます。
+
+### 解説:
+`COUNT` 関数は `NULL` を無視します。CASE式で `ELSE` を省略すると、条件に合わない場合は `NULL` が返るため、条件に合った行だけが「1」となり、結果としてその件数がカウントされます。少し応用的な内容ですが、レポート作成では非常によく使う書き方です（`SUM(CASE WHEN ... THEN 1 ELSE 0 END)` でも同じ結果になります）。
 
 ---
 
@@ -117,7 +161,9 @@ ORDER BY
     END ASC,
     price DESC;
 ```
-> **解説**: `ORDER BY` 句でCASE式を使うと、カテゴリ名そのものではなく、「1, 2, 3」という変換後の数値に基づいて並び替えが行われます。
+
+### 解説:
+`ORDER BY` 句でCASE式を使うと、カテゴリ名そのものではなく、「1, 2, 3」という変換後の数値に基づいて並び替えが行われます。並び替えのためだけに使うCASE式は、`SELECT` 句に出さなくても `ORDER BY` で使えます。
 
 ---
 
@@ -134,6 +180,7 @@ ORDER BY
 
 ### 解答:
 ```sql
+-- 案1: 論理演算子 OR を使う（推奨）
 SELECT
     order_id,
     customer_id,
@@ -148,8 +195,8 @@ ORDER BY
     customer_id, order_date;
 ```
 
-**別解: CASE式を使う（非推奨）**
 ```sql
+-- 案2: WHERE 句に CASE 式を書く（非推奨）
 SELECT
     order_id,
     customer_id,
@@ -157,14 +204,16 @@ SELECT
 FROM
     orders_trn
 WHERE
-    CASE 
+    CASE
         WHEN customer_id = 1 THEN order_date >= '2023-08-10'
-        ELSE TRUE 
+        ELSE TRUE
     END
 ORDER BY
     customer_id, order_date;
 ```
-> **注意**: SQLの `WHERE` 句は「行ごとにTrueかFalseかを判定する場所」なので、CASE式の結果として比較式（`order_date >= ...`）を返すことは通常できません（一部のDBを除く）。PostgreSQLでは上記のような `CASE WHEN ... THEN 比較式 ELSE TRUE END` がブール値を返す式として機能する場合がありますが、可読性が低いため通常は推奨されません。
+
+### 解説:
+SQLの `WHERE` 句は「行ごとにTrueかFalseかを判定する場所」なので、CASE式の結果として比較式（`order_date >= ...`）を返すことは通常できません（一部のDBを除く）。PostgreSQLでは案2のような `CASE WHEN ... THEN 比較式 ELSE TRUE END` がブール値を返す式として機能しますが、可読性が低いため通常は推奨されません。「どの行を残すか」の条件分岐は、案1のように `AND` / `OR` で素直に書きます。
 
 ---
 
@@ -197,12 +246,18 @@ ORDER BY
     detail_and_stock_status, product_name;
 ```
 
+### 解説:
+NULL の判定は `= NULL` ではなく `IS NULL` / `IS NOT NULL` で行います。`ELSE 'その他'` に落ちるのは「メモが未入力かつ在庫0」の商品で、今回のデータでは `product_id = 18`（ラジコンカー）1件だけです。
+
 ---
 
-# 追加課題 解答
+## 追加課題（ここから先は任意）
+
+**問題 6 まで**が必須です。ここから先は、早く終わった人・もっと解きたい人向けです。
+
 ---
 
-## 追加問題 1: WHEN の書き順が結果を変える
+## 問題 7: WHEN の書き順が結果を変える
 - **目的**: `CASE` の `WHEN` が上から順に評価され最初に真になった枝で確定するため、条件が排他的でない場合は「優先したい条件を先に書く」必要があることを、キャンセル注文を例に理解する。
 
 ### 問題:
@@ -233,6 +288,8 @@ ORDER BY
 **(2)** ルールどおりの結果になるよう、上のSQLを修正してください。
 
 **(3)** 修正前と修正後で、各ステータスの件数がどう変わるか答えてください。
+
+> **ヒント**: 2つの条件のどちらにも当てはまってしまう注文がないか探してみましょう。
 
 ### 解答:
 ```sql
@@ -288,11 +345,12 @@ ORDER BY
 | 前年度以前 | 11 | 11 |
 | 合計 | 18 | 18 |
 
-> **解説**: `CASE` は上から順に `WHEN` を評価し、最初に TRUE になった枝で確定して以降の `WHEN` を見ません。今回の2つの条件は排他的ではなく「2024年のキャンセル注文」が両方に当てはまるため、書き順がそのまま結果を変えます。実務では「キャンセル」「削除済み」のような除外・上書き系の条件を必ず先頭に書くこと、また合計は誤った順序でも18件のままなので合計件数だけ見ていても誤りに気づけないことを押さえてください。
+### 解説:
+`CASE` は上から順に `WHEN` を評価し、最初に TRUE になった枝で確定して以降の `WHEN` を見ません。今回の2つの条件は排他的ではなく「2024年のキャンセル注文」が両方に当てはまるため、書き順がそのまま結果を変えます。実務では「キャンセル」「削除済み」のような除外・上書き系の条件を必ず先頭に書くこと、また合計は誤った順序でも18件のままなので合計件数だけ見ていても誤りに気づけないことを押さえてください。
 
 ---
 
-## 追加問題 2: シンプルCASE式では NULL を判定できない
+## 問題 8: シンプルCASE式では NULL を判定できない
 - **目的**: シンプルCASE式（`CASE 列 WHEN 値 …`）は内部的に `=` による等価比較であるため NULL を捕まえられず、NULL の分岐には検索CASE式と `IS NULL` が必要であることを理解する。
 
 ### 問題:
@@ -320,6 +378,8 @@ ORDER BY
 **(3)** `説明なし` が正しく 7 件表示されるように、このSQLを修正してください。
 
 **(4)** シンプルCASE式が正しく使える例を、`category` 列を英語から日本語に置き換える形で1つ書いてください。
+
+> **ヒント**: SQLでは `NULL = NULL` も `列 = NULL` も真にはなりません（結果は UNKNOWN）。
 
 ### 解答:
 ```sql
@@ -390,14 +450,16 @@ ORDER BY
 
 ※ `その他` の 3 件は `Home & Kitchen`（`product_id` = 3, 7, 12）。`WHEN` に列挙し忘れたため `ELSE` に落ちている。
 
-> **解説**: シンプルCASE式は内部で `列 = 値` の等価比較を行うため、`WHEN NULL` は `memo = NULL` となり結果が UNKNOWN になって決して真になりません。NULL を分岐させたいときは検索CASE式にして `IS NULL` を使います。(4) のような値の対応表ならシンプルCASE式の方が読みやすいのですが、`Home & Kitchen` が列挙漏れで `ELSE` に落ちているように、実データで漏れがないか必ず確認してください。
+### 解説:
+シンプルCASE式は内部で `列 = 値` の等価比較を行うため、`WHEN NULL` は `memo = NULL` となり結果が UNKNOWN になって決して真になりません。NULL を分岐させたいときは検索CASE式にして `IS NULL` を使います。(4) のような値の対応表ならシンプルCASE式の方が読みやすいのですが、`Home & Kitchen` が列挙漏れで `ELSE` に落ちているように、実データで漏れがないか必ず確認してください。
 
 ---
 
-## 追加問題 3: UPDATE の SET 句で CASE を使う（`ELSE` 省略の罠）
+## 問題 9: UPDATE の SET 句で CASE を使う（`ELSE` 省略の罠）
 - **目的**: 1つの `UPDATE` 文で行ごとに違う値をセットする `SET 列 = CASE …` の書き方を習得し、`ELSE` を省略すると条件に合わない行が NULL で潰れることを理解する。
+
 ### 問題:
-> **注意**: この問題は `UPDATE` 文で `products_mst` のデータを実際に書き換えます。この章のあとも同じテーブルを使うので、**`BEGIN;` … `ROLLBACK;` で囲んで実行する**か、下の復旧SQLで必ず元の状態に戻してください。
+> **注意**: この問題は `UPDATE` 文で `products_mst` のデータを実際に書き換えます。この章のあとも同じテーブルを使うので、**`BEGIN;` … `ROLLBACK;` で囲んで実行する**か、章の先頭の **準備 → リセットSQL** で必ず元の状態に戻してください。
 
 `products_mst` の **販売中の商品（`deleted_at` が NULL）** だけを対象に、**1つの `UPDATE` 文** で `memo` を次のように更新してください。
 
@@ -412,6 +474,8 @@ ORDER BY
 **(2)** (1) の `CASE` 式から `ELSE` を削除すると何が起きますか。まず理由を予想して答えたうえで、`BEGIN;` … `ROLLBACK;` で囲んで実際に確認してください。
 
 **(3)** `COALESCE` を使わず `'【欠品】' || memo` と書いた場合、`product_id = 18`（ラジコンカー）はどうなりますか。
+
+> **ヒント**: `CASE` はどの `WHEN` にも当てはまらず `ELSE` も無いとき、何を返すか思い出してください。
 
 ### 解答:
 ```sql
@@ -469,25 +533,9 @@ WHERE
     deleted_at IS NULL;
 SELECT product_id, product_name, memo FROM products_mst WHERE product_id IN (7, 17, 18, 20, 23) ORDER BY product_id;
 ROLLBACK;
-
--- ★ 復旧SQL（(1) をそのまま実行してしまった場合は必ずこれを流す）
-UPDATE products_mst SET memo = 'スムージー作りに最適'      WHERE product_id = 7;
-UPDATE products_mst SET memo = '知育玩具・対象年齢3歳から' WHERE product_id = 17;
-UPDATE products_mst SET memo = NULL                        WHERE product_id = 18;
-UPDATE products_mst SET memo = NULL                        WHERE product_id = 20;
-UPDATE products_mst SET memo = 'ギフト包装対応'            WHERE product_id = 23;
-
--- ★ 復旧の検証（memo が未入力の商品がちょうど 7 件に戻っていればOK）
-SELECT
-    product_id,
-    product_name
-FROM
-    products_mst
-WHERE
-    memo IS NULL
-ORDER BY
-    product_id;
 ```
+
+★ (1) を `BEGIN;` … `ROLLBACK;` で囲まずに実行してしまった場合は、章の先頭の **準備 → リセットSQL** を流して元の状態に戻してください。
 
 ### 期待結果:
 
@@ -505,7 +553,7 @@ ORDER BY
 
 (3) `COALESCE` なしの場合 ―― `product_id = 18` は `'【欠品】' || NULL` が NULL になるため `memo` は NULL のままで、`【欠品】` の印が付かない（`product_id = 20` も同じく NULL のまま）
 
-復旧SQL実行後に `memo` が未入力の商品
+リセットSQL実行後に `memo` が未入力の商品
 
 | product_id | product_name |
 | ---: | :--- |
@@ -517,5 +565,7 @@ ORDER BY
 | 21 | A4 ノート 5冊セット |
 | 22 | 蛍光マーカー 6色 |
 
-> **解説**: `UPDATE` は `WHERE` に合致した行すべてを書き換えるため、`CASE` が NULL を返せばその NULL がそのまま書き込まれます。`ELSE memo`（元の列）を書かないと、条件に合わない行の値まで消えてしまうので、`SET 列 = CASE …` では `ELSE 元の列` を必ず書きます。「UPDATE 22」と表示されても実際に値が変わったのは 5 行であり、更新件数＝変更された件数ではない点も押さえてください。
-> **⚠️ 講師向けの注意**: 演習後は必ず復旧SQLを流し、`memo` が未入力の商品が 7 件（`product_id` = 2, 6, 11, 18, 20, 21, 22）に戻っていることを確認してください。この状態を前提に 07 章の追加問題 2（`memo` 入力率）などが作られています。
+### 解説:
+`UPDATE` は `WHERE` に合致した行すべてを書き換えるため、`CASE` が NULL を返せばその NULL がそのまま書き込まれます。`ELSE memo`（元の列）を書かないと、条件に合わない行の値まで消えてしまうので、`SET 列 = CASE …` では `ELSE 元の列` を必ず書きます。「UPDATE 22」と表示されても実際に値が変わったのは 5 行であり、更新件数＝変更された件数ではない点も押さえてください。
+
+> **⚠️ 講師向けの注意**: 演習後は必ずリセットSQLを流し、`memo` が未入力の商品が 7 件（`product_id` = 2, 6, 11, 18, 20, 21, 22）に戻っていることを確認してください。この状態を前提に 07章の問題 11（`memo` 入力率）などが作られています。

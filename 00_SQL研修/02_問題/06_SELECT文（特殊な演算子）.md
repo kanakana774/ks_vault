@@ -1,3 +1,60 @@
+# 06章 演習：SELECT文（特殊な演算子）
+
+使用するテーブルは02章で作成した `products_mst` / `customers_mst` / `orders_trn` / `order_details_trn` です。
+問題 9〜12 は `UPDATE` / `DELETE` でデータを変更します。確認が終わったら準備の**リセットSQL**で初期状態に戻してください。
+
+---
+
+## 準備
+
+### 使用するテーブル
+
+02章で作成した `products_mst` / `customers_mst` / `orders_trn` / `order_details_trn` をそのまま使います。この章で新しく作るテーブルはありません。
+
+### リセットSQL
+
+問題 9〜12 でデータを変更したあと、値が分からなくなったらこれを実行すれば初期状態に戻ります。
+
+```sql
+-- 問題 9: 在庫数を初期値に戻す
+UPDATE products_mst SET stock_quantity =   0 WHERE product_id IN (7, 17, 18, 23);
+UPDATE products_mst SET stock_quantity = 300 WHERE product_id IN (6, 16);
+UPDATE products_mst SET stock_quantity =  80 WHERE product_id = 3;
+UPDATE products_mst SET stock_quantity = 180 WHERE product_id = 10;
+UPDATE products_mst SET stock_quantity = 110 WHERE product_id = 12;
+UPDATE products_mst SET stock_quantity = 400 WHERE product_id = 15;
+UPDATE products_mst SET stock_quantity =  30 WHERE product_id = 20;
+UPDATE products_mst SET stock_quantity = 500 WHERE product_id = 21;
+UPDATE products_mst SET stock_quantity = 420 WHERE product_id = 22;
+
+-- 問題 10: 登録日を初期値に戻す
+UPDATE customers_mst SET created_date = '2023-02-20' WHERE customer_id = 2;
+UPDATE customers_mst SET created_date = '2023-05-05' WHERE customer_id = 5;
+UPDATE customers_mst SET created_date = '2023-07-25' WHERE customer_id = 7;
+
+-- 問題 11: 価格を初期値に戻す
+UPDATE products_mst SET price = 1800.00 WHERE product_id = 6;
+UPDATE products_mst SET price = 1200.00 WHERE product_id IN (15, 20);
+
+-- 問題 12 の「正しい削除手順」まで実行した場合のみ（親 → 子 の順で戻す）
+INSERT INTO products_mst (product_id, category, product_name, price, stock_quantity, memo, deleted_at)
+VALUES (8, 'Electronics', 'USB 充電器', 1500.00, 500, 'PD 対応、急速充電可能', NULL);
+INSERT INTO order_details_trn VALUES (3, 8, 3, NULL), (17, 8, 2, NULL);
+```
+
+**検証SQL** ―― 商品23件・注文明細28件・Toys の3件がすべて在庫0 なら初期状態です。
+
+```sql
+SELECT COUNT(*) AS products FROM products_mst;
+SELECT COUNT(*) AS order_details FROM order_details_trn;
+SELECT product_id, product_name, stock_quantity
+FROM products_mst
+WHERE category = 'Toys'
+ORDER BY product_id;
+```
+
+---
+
 ## 問題 1: 特定の範囲内の価格を持つ商品を検索する
 - **目的**: `WHERE` 句と `BETWEEN` 演算子を使用して、数値範囲内のデータを効率的に絞り込む方法を理解する。
 
@@ -130,6 +187,8 @@
 ### 問題:
 `customers_mst` テーブルで、**customer_id が 2, 5, 7** の顧客の登録日(`created_date`)を、**今日の最新日付** に更新してください。
 
+> **注意**: このSQLはデータを変更します。実行後は準備の**リセットSQL**で登録日を元の状態に戻してください。
+
 ### 解答:
 ```sql
 ここに解答を記入
@@ -142,6 +201,8 @@
 
 ### 問題:
 `products_mst` テーブルで、商品名に **「コーヒー」または「はちみつ」** という文字列が含まれる商品の価格を、一律 **1,500.00 円** に更新してください。
+
+> **注意**: このSQLはデータを変更します。実行後は準備の**リセットSQL**で価格を元の状態に戻してください。
 
 ### 解答:
 ```sql
@@ -168,10 +229,13 @@
 
 ---
 
-# 追加課題
+## 追加課題（ここから先は任意）
+
+**問題 12 まで**が必須です。ここから先は、早く終わった人・もっと解きたい人向けです。
+
 ---
 
-## 追加問題 1: LIKE の2大落とし穴（大文字小文字・ワイルドカード文字）
+## 問題 13: LIKE の2大落とし穴（大文字小文字・ワイルドカード文字）
 - **目的**: `LIKE` が大文字小文字を区別すること、`%` や `_` そのものを検索するにはエスケープが必要であることを実データで確認し、回避策（`ILIKE` / `UPPER` / `ESCAPE`）を書けるようにする。
 
 ### 問題:
@@ -185,6 +249,8 @@
 
 **(4)** (3) が正しく1件だけ返るように修正してください。
 
+> **注意**: 本問はすべて `SELECT` のみで、データを変更しません。
+
 ### 解答:
 ```sql
 ここに解答を記入
@@ -192,7 +258,7 @@
 
 ---
 
-## 追加問題 2: TIMESTAMP に BETWEEN を使うと終了日が漏れる
+## 問題 14: TIMESTAMP に BETWEEN を使うと終了日が漏れる
 - **目的**: 日時型(`TIMESTAMPTZ`)に対する `BETWEEN` は終端が `00:00:00` として解釈されるため最終日のデータが落ちることを理解し、`>= 開始日 AND < 翌日` という半開区間で書けるようにする。
 
 ### 問題:
@@ -206,6 +272,8 @@
 
 **(4)** 商品・顧客とも正しく1件ずつ返るように、両方のSQLを修正してください。
 
+> **注意**: 本問はすべて `SELECT` のみで、データを変更しません。
+
 ### 解答:
 ```sql
 ここに解答を記入
@@ -213,7 +281,7 @@
 
 ---
 
-## 追加問題 3: LIMIT / OFFSET のページ送りで行が重複・欠落する
+## 問題 15: LIMIT / OFFSET のページ送りで行が重複・欠落する
 - **目的**: `ORDER BY` のキーが一意でないと `LIMIT` / `OFFSET` によるページ送りで同じ行が2回出たり抜けたりすることを理解し、タイブレークに主キーを加える対処を身につける。
 
 ### 問題:
@@ -225,7 +293,10 @@
 
 **(3)** このページ送りには「**同じ商品が両方のページに出る**」または「**どちらのページにも出ない**」という不具合が潜んでいます。なぜそうなるのかを説明し、正しくページ送りできるようにSQLを修正してください。
 
+> **注意**: 本問はすべて `SELECT` のみで、データを変更しません。
+
 ### 解答:
 ```sql
 ここに解答を記入
 ```
+

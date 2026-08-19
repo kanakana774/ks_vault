@@ -1,5 +1,43 @@
+# 06章 演習：CASE式
+
+使用するテーブルは02章で作成した `products_mst` / `customers_mst` / `orders_trn` です。
+
+---
+
+## 準備
+
+### 使用するテーブル
+02章で作成した `products_mst` / `customers_mst` / `orders_trn` をそのまま使います。
+
+### リセットSQL
+問題 9 は `UPDATE` で `products_mst` の `memo` を書き換えます。`BEGIN;` … `ROLLBACK;` で囲まずに実行してしまった場合は、次のSQLで元の状態に戻してください。
+
+```sql
+UPDATE products_mst SET memo = 'スムージー作りに最適'      WHERE product_id = 7;
+UPDATE products_mst SET memo = '知育玩具・対象年齢3歳から' WHERE product_id = 17;
+UPDATE products_mst SET memo = NULL                        WHERE product_id = 18;
+UPDATE products_mst SET memo = NULL                        WHERE product_id = 20;
+UPDATE products_mst SET memo = 'ギフト包装対応'            WHERE product_id = 23;
+```
+
+戻ったかどうかは次のSQLで確認します。`memo` が未入力の商品が 7 件（`product_id` = 2, 6, 11, 18, 20, 21, 22）になっていればOKです。
+
+```sql
+SELECT
+    product_id,
+    product_name
+FROM
+    products_mst
+WHERE
+    memo IS NULL
+ORDER BY
+    product_id;
+```
+
+---
+
 ## 問題 1: 商品の価格帯を分類する（検索CASE式）
-- **目的**: 検索CASE式（CASE WHEN ...）を使用して、数値データ（価格）を基に新しいカテゴリ文字列を作成して表示する方法を理解する。
+- **目的**: 検索CASE式（`CASE WHEN ...`）を使用して、数値データ（価格）を基に新しいカテゴリ文字列を作成して表示する方法を理解する。
 
 ### 問題:
 `products_mst` テーブルから、各商品の **価格帯** を以下の基準で分類し、「商品名」「価格」「分類された価格帯（price_category）」を表示してください。
@@ -34,8 +72,7 @@
 ---
 
 ## 問題 3: 商品カテゴリごとの在庫状況を評価する（クロス集計の基礎）
-- **目的**: `COUNT(CASE ... END)` というテクニックを使い、条件に応じた件数を数える方法（いわゆるピボット/クロス集計）を学ぶ。
-  ※少し応用的な内容ですが、レポート作成で非常によく使います。
+- **目的**: `COUNT(CASE ... END)` を使い、条件に応じた件数を横並びに集計する（ピボット／クロス集計の）方法を習得する。
 
 ### 問題:
 `products_mst` テーブルから、 **カテゴリごと** に以下の在庫状況別の商品数を集計して表示してください。
@@ -87,7 +124,6 @@
 ```sql
 ここに解答を記入
 ```
-> **注意**: SQLの `WHERE` 句は「行ごとにTrueかFalseかを判定する場所」なので、CASE式の結果として比較式（`order_date >= ...`）を返すことは通常できません（一部のDBを除く）。PostgreSQLでは上記のような `CASE WHEN ... THEN 比較式 ELSE TRUE END` がブール値を返す式として機能する場合がありますが、可読性が低いため通常は推奨されません。
 
 ---
 
@@ -109,10 +145,13 @@
 
 ---
 
-# 追加課題
+## 追加課題（ここから先は任意）
+
+**問題 6 まで**が必須です。ここから先は、早く終わった人・もっと解きたい人向けです。
+
 ---
 
-## 追加問題 1: WHEN の書き順が結果を変える
+## 問題 7: WHEN の書き順が結果を変える
 - **目的**: `CASE` の `WHEN` が上から順に評価され最初に真になった枝で確定するため、条件が排他的でない場合は「優先したい条件を先に書く」必要があることを、キャンセル注文を例に理解する。
 
 ### 問題:
@@ -153,7 +192,7 @@ ORDER BY
 
 ---
 
-## 追加問題 2: シンプルCASE式では NULL を判定できない
+## 問題 8: シンプルCASE式では NULL を判定できない
 - **目的**: シンプルCASE式（`CASE 列 WHEN 値 …`）は内部的に `=` による等価比較であるため NULL を捕まえられず、NULL の分岐には検索CASE式と `IS NULL` が必要であることを理解する。
 
 ### 問題:
@@ -191,11 +230,11 @@ ORDER BY
 
 ---
 
-## 追加問題 3: UPDATE の SET 句で CASE を使う（`ELSE` 省略の罠）
+## 問題 9: UPDATE の SET 句で CASE を使う（`ELSE` 省略の罠）
 - **目的**: 1つの `UPDATE` 文で行ごとに違う値をセットする `SET 列 = CASE …` の書き方を習得し、`ELSE` を省略すると条件に合わない行が NULL で潰れることを理解する。
 
 ### 問題:
-> **注意**: この問題は `UPDATE` 文で `products_mst` のデータを実際に書き換えます。この章のあとも同じテーブルを使うので、**`BEGIN;` … `ROLLBACK;` で囲んで実行する**か、解答に載せた復旧SQLで必ず元の状態に戻してください。
+> **注意**: この問題は `UPDATE` 文で `products_mst` のデータを実際に書き換えます。この章のあとも同じテーブルを使うので、**`BEGIN;` … `ROLLBACK;` で囲んで実行する**か、章の先頭の **準備 → リセットSQL** で必ず元の状態に戻してください。
 
 `products_mst` の **販売中の商品（`deleted_at` が NULL）** だけを対象に、**1つの `UPDATE` 文** で `memo` を次のように更新してください。
 
@@ -217,3 +256,4 @@ ORDER BY
 ```sql
 ここに解答を記入
 ```
+

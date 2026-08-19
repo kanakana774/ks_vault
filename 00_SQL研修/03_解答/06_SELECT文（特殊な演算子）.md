@@ -1,3 +1,60 @@
+# 06章 演習 解答：SELECT文（特殊な演算子）
+
+**PostgreSQL 17 で実際に動かした結果を載せています。** 使用するテーブルは02章で作成した `products_mst` / `customers_mst` / `orders_trn` / `order_details_trn` です。
+問題 9〜12 は `UPDATE` / `DELETE` でデータを変更します。確認が終わったら準備の**リセットSQL**で初期状態に戻してください。
+
+---
+
+## 準備
+
+### 使用するテーブル
+
+02章で作成した `products_mst` / `customers_mst` / `orders_trn` / `order_details_trn` をそのまま使います。この章で新しく作るテーブルはありません。
+
+### リセットSQL
+
+問題 9〜12 でデータを変更したあと、値が分からなくなったらこれを実行すれば初期状態に戻ります。
+
+```sql
+-- 問題 9: 在庫数を初期値に戻す
+UPDATE products_mst SET stock_quantity =   0 WHERE product_id IN (7, 17, 18, 23);
+UPDATE products_mst SET stock_quantity = 300 WHERE product_id IN (6, 16);
+UPDATE products_mst SET stock_quantity =  80 WHERE product_id = 3;
+UPDATE products_mst SET stock_quantity = 180 WHERE product_id = 10;
+UPDATE products_mst SET stock_quantity = 110 WHERE product_id = 12;
+UPDATE products_mst SET stock_quantity = 400 WHERE product_id = 15;
+UPDATE products_mst SET stock_quantity =  30 WHERE product_id = 20;
+UPDATE products_mst SET stock_quantity = 500 WHERE product_id = 21;
+UPDATE products_mst SET stock_quantity = 420 WHERE product_id = 22;
+
+-- 問題 10: 登録日を初期値に戻す
+UPDATE customers_mst SET created_date = '2023-02-20' WHERE customer_id = 2;
+UPDATE customers_mst SET created_date = '2023-05-05' WHERE customer_id = 5;
+UPDATE customers_mst SET created_date = '2023-07-25' WHERE customer_id = 7;
+
+-- 問題 11: 価格を初期値に戻す
+UPDATE products_mst SET price = 1800.00 WHERE product_id = 6;
+UPDATE products_mst SET price = 1200.00 WHERE product_id IN (15, 20);
+
+-- 問題 12 の「正しい削除手順」まで実行した場合のみ（親 → 子 の順で戻す）
+INSERT INTO products_mst (product_id, category, product_name, price, stock_quantity, memo, deleted_at)
+VALUES (8, 'Electronics', 'USB 充電器', 1500.00, 500, 'PD 対応、急速充電可能', NULL);
+INSERT INTO order_details_trn VALUES (3, 8, 3, NULL), (17, 8, 2, NULL);
+```
+
+**検証SQL** ―― 商品23件・注文明細28件・Toys の3件がすべて在庫0 なら初期状態です。
+
+```sql
+SELECT COUNT(*) AS products FROM products_mst;
+SELECT COUNT(*) AS order_details FROM order_details_trn;
+SELECT product_id, product_name, stock_quantity
+FROM products_mst
+WHERE category = 'Toys'
+ORDER BY product_id;
+```
+
+---
+
 ## 問題 1: 特定の範囲内の価格を持つ商品を検索する
 - **目的**: `WHERE` 句と `BETWEEN` 演算子を使用して、数値範囲内のデータを効率的に絞り込む方法を理解する。
 
@@ -17,6 +74,9 @@ SELECT *
 FROM products_mst
 WHERE price >= 5000 AND price <= 10000;
 ```
+
+### 解説:
+`BETWEEN A AND B` は `>= A AND <= B` と同じで、**両端を含みます**。5,000円ちょうど・10,000円ちょうどの商品も対象になる点を確認してください。
 
 ---
 
@@ -39,7 +99,9 @@ SELECT *
 FROM products_mst
 WHERE category = 'Books' OR category = 'Food';
 ```
-> **解説**: 項目が増える場合、`OR` を連ねるよりも `IN` を使う方がSQLがスッキリして読みやすくなります。
+
+### 解説:
+項目が増える場合、`OR` を連ねるよりも `IN` を使う方がSQLがスッキリして読みやすくなります。
 
 ---
 
@@ -109,7 +171,9 @@ FROM products_mst
 ORDER BY price DESC
 LIMIT 2 OFFSET 3;
 ```
-> **解説**: `OFFSET 3` は「最初の3件を飛ばす」という意味なので、結果として4件目からデータが取得されます。
+
+### 解説:
+`OFFSET 3` は「最初の3件を飛ばす」という意味なので、結果として4件目からデータが取得されます。
 
 ---
 
@@ -135,7 +199,8 @@ WHERE product_name LIKE '_ー%';
 | 11 | ゲーミングマウス | Electronics | 7800.00 |
 | 14 | ポータブルバッテリー | Electronics | 3980.00 |
 
-> **解説**: `%` は0文字以上の任意の文字列を表しますが、`_` は「任意の1文字」を表します。
+### 解説:
+`%` は0文字以上の任意の文字列を表しますが、`_` は「任意の1文字」を表します。
 
 ---
 
@@ -154,6 +219,9 @@ WHERE created_date BETWEEN '2023-03-01' AND '2023-07-31'
 ORDER BY created_date ASC;
 ```
 
+### 解説:
+`created_date` は `DATE` 型で時刻を持たないため、`BETWEEN` で両端の日付をそのまま含められます。時刻を持つ `TIMESTAMP` 型に同じ書き方をすると終了日が落ちます（問題 14 で扱います）。
+
 ---
 
 ## 問題 9: 特定のカテゴリに属さない商品の在庫数を調整する
@@ -162,17 +230,14 @@ ORDER BY created_date ASC;
 ### 問題:
 `products_mst` テーブルで、カテゴリが **'Electronics' と 'Books' 以外** の商品の在庫数(`stock_quantity`)を、現在の値から **10個 増加** させてください。
 
+> **注意**: このSQLはデータを変更します。実行後は解答に記載の復旧SQLを実行して、在庫数を元の状態に戻してください（ここで変更される在庫数は後続の章の問題でも使用します）。
+
 ### 解答:
 ```sql
 UPDATE products_mst
 SET stock_quantity = stock_quantity + 10
 WHERE category NOT IN ('Electronics', 'Books');
 ```
-
-### 期待結果:
-更新対象は **13 件**（Food 4件・Home & Kitchen 3件・Stationery 3件・Toys 3件）です。
-
-> **注意**: このUPDATEは Toys の3商品（`product_id` = 17・18・23）の在庫数を **0 → 10** に変えてしまいます。この3件が在庫0であることは **07章 追加問題6(2)「全商品が在庫0のカテゴリ」** の前提なので、確認が終わったら必ず下記の復旧SQLを実行してデータを元に戻してください。
 
 **復旧SQL**
 ```sql
@@ -187,7 +252,13 @@ FROM products_mst
 WHERE category = 'Toys'
 ORDER BY product_id;
 ```
-> **解説**: `NOT IN ('Electronics', 'Books')` は「リストのどれとも一致しない」という条件で、`category <> 'Electronics' AND category <> 'Books'` と同じ意味です。`UPDATE` は `WHERE` を書き忘れると全行が更新されるため、先に同じ `WHERE` で `SELECT` して対象件数を確かめてから実行するのが実務の作法です。
+
+### 期待結果:
+更新対象は **13 件**（Food 4件・Home & Kitchen 3件・Stationery 3件・Toys 3件）です。
+
+### 解説:
+`NOT IN ('Electronics', 'Books')` は「リストのどれとも一致しない」という条件で、`category <> 'Electronics' AND category <> 'Books'` と同じ意味です。`UPDATE` は `WHERE` を書き忘れると全行が更新されるため、先に同じ `WHERE` で `SELECT` して対象件数を確かめてから実行するのが実務の作法です。
+なおこの `UPDATE` は Toys の3商品（`product_id` = 17・18・23）の在庫数を **0 → 10** に変えてしまいます。この3件が在庫0であることは [[00_SQL研修/02_問題/07_group byと集計関数|07章]] 問題 15(2)「全商品が欠品しているカテゴリ」の前提なので、確認が終わったら必ず復旧SQLを実行してください。
 
 ---
 
@@ -197,12 +268,17 @@ ORDER BY product_id;
 ### 問題:
 `customers_mst` テーブルで、**customer_id が 2, 5, 7** の顧客の登録日(`created_date`)を、**今日の最新日付** に更新してください。
 
+> **注意**: このSQLはデータを変更します。実行後は準備の**リセットSQL**で登録日を元の状態に戻してください。
+
 ### 解答:
 ```sql
 UPDATE customers_mst
 SET created_date = CURRENT_DATE
 WHERE customer_id IN (2, 5, 7);
 ```
+
+### 解説:
+`CURRENT_DATE` は実行した日の日付を返すため、実行するたびに入る値が変わります。この更新は `customer_id` = 5・7 の登録日も書き換えるので、戻さないまま進めると問題 4・問題 8 の結果が変わってしまいます。確認が終わったらリセットSQLで戻してください。
 
 ---
 
@@ -212,6 +288,8 @@ WHERE customer_id IN (2, 5, 7);
 ### 問題:
 `products_mst` テーブルで、商品名に **「コーヒー」または「はちみつ」** という文字列が含まれる商品の価格を、一律 **1,500.00 円** に更新してください。
 
+> **注意**: このSQLはデータを変更します。実行後は準備の**リセットSQL**で価格を元の状態に戻してください。
+
 ### 解答:
 ```sql
 UPDATE products_mst
@@ -219,7 +297,12 @@ SET price = 1500.00
 WHERE product_name LIKE '%コーヒー%'
    OR product_name LIKE '%はちみつ%';
 ```
-> **注意**: `WHERE product_name LIKE '%コーヒー%' OR '%はちみつ%'` と書くのは間違いです。`OR` の後ろにも完全な条件式を書く必要があります。
+
+### 期待結果:
+更新対象は **3 件**（`product_id` = 6「オーガニックコーヒー豆」・15「国産はちみつ」・20「 国産はちみつ 」）です。
+
+### 解説:
+`WHERE product_name LIKE '%コーヒー%' OR '%はちみつ%'` と書くのは間違いです。`OR` の後ろにも「列 演算子 値」の形をした**完全な条件式**を書く必要があります。
 
 ---
 
@@ -232,6 +315,8 @@ WHERE product_name LIKE '%コーヒー%'
 ※なお、外部キー制約がある場合、本来は子テーブルから削除する必要がありますが、ここでは `WHERE` 句の書き方の学習として、商品テーブルに対する削除文のみ記述してください。
 書けたら **実際に実行して、どうなるかを確認してください。**
 
+> **注意**: このSQLはデータを変更します。実行結果と、データを元に戻すための復旧SQLは解答に記載しています。
+
 ### 解答:
 ```sql
 DELETE FROM products_mst
@@ -243,12 +328,7 @@ WHERE product_name LIKE '%充電器%';
 -- DETAIL:  Key (product_id)=(8) is still referenced from table "order_details_trn".
 ```
 
-### 期待結果:
-条件に合う商品は `product_id = 8`「USB 充電器」の **1件だけ** ですが、この商品は `order_details_trn` から **2行（order_id = 3 と 17）参照されている** ため、上記のとおり **必ず外部キー制約違反でエラーになり、1件も削除されません**。
-
-> **注意**: 下の「正しい削除手順」を実際に実行すると注文明細が2行消えます。試した場合は必ず復旧SQLでデータを元に戻してください。
-
-**正しい削除手順**
+**正しい削除手順** ―― 実行すると注文明細が2行消えます。試した場合は必ず下の復旧SQLで戻してください。
 ```sql
 -- 1. 先に子テーブル（注文明細）から該当商品の行を削除する
 DELETE FROM order_details_trn
@@ -272,14 +352,22 @@ INSERT INTO order_details_trn VALUES (3, 8, 3, NULL), (17, 8, 2, NULL);
 SELECT COUNT(*) AS order_details_rows FROM order_details_trn;
 SELECT * FROM products_mst WHERE product_id = 8;
 ```
-> **解説**: 参照されている親行は削除できない、というのが外部キー制約の役割そのもの（データベースが「注文明細の指す商品が存在しない」状態を防いでいる）です。実務では物理削除ではなく `deleted_at` を立てる論理削除にするのが一般的で、このテーブルにも `deleted_at` 列が用意されています。
+
+### 期待結果:
+条件に合う商品は `product_id = 8`「USB 充電器」の **1件だけ** ですが、この商品は `order_details_trn` から **2行（order_id = 3 と 17）参照されている** ため、上記のとおり **必ず外部キー制約違反でエラーになり、1件も削除されません**。
+
+### 解説:
+参照されている親行は削除できない、というのが外部キー制約の役割そのもの（データベースが「注文明細の指す商品が存在しない」状態を防いでいる）です。実務では物理削除ではなく `deleted_at` を立てる論理削除にするのが一般的で、このテーブルにも `deleted_at` 列が用意されています。
 
 ---
 
-# 追加課題 解答
+## 追加課題（ここから先は任意）
+
+**問題 12 まで**が必須です。ここから先は、早く終わった人・もっと解きたい人向けです。
+
 ---
 
-## 追加問題 1: LIKE の2大落とし穴（大文字小文字・ワイルドカード文字）
+## 問題 13: LIKE の2大落とし穴（大文字小文字・ワイルドカード文字）
 - **目的**: `LIKE` が大文字小文字を区別すること、`%` や `_` そのものを検索するにはエスケープが必要であることを実データで確認し、回避策（`ILIKE` / `UPPER` / `ESCAPE`）を書けるようにする。
 
 ### 問題:
@@ -292,6 +380,8 @@ SELECT * FROM products_mst WHERE product_id = 8;
 **(3)** 商品説明(`memo`)に `%` という記号そのものが含まれる商品を探したいと考え、`memo LIKE '%%%'` と書きました。これは何件返りますか。なぜそうなるのか説明してください。
 
 **(4)** (3) が正しく1件だけ返るように修正してください。
+
+> **注意**: 本問はすべて `SELECT` のみで、データを変更しません。
 
 ### 解答:
 ```sql
@@ -359,11 +449,12 @@ WHERE memo LIKE '%!%%' ESCAPE '!';
 | ---: | :--- | :--- |
 | 15 | 国産はちみつ | 100%純粋なはちみつ |
 
-> **解説**: `LIKE` は大文字小文字を区別するため、検索機能をそのまま `LIKE` で実装すると「`sql` で検索しても商品が出てこない」というクレームになります（PostgreSQL なら `ILIKE`、他DBMSへの移植性を重視するなら `UPPER()` で揃える）。`%` と `_` はパターン中では常にワイルドカードなので、記号そのものを探すにはエスケープが必須です。ユーザーの入力値をそのまま `LIKE` に渡すと `%` 1文字で全件がヒットし検索が実質無効になるため、アプリ側で入力値のエスケープが必要になります。
+### 解説:
+`LIKE` は大文字小文字を区別するため、検索機能をそのまま `LIKE` で実装すると「`sql` で検索しても商品が出てこない」というクレームになります（PostgreSQL なら `ILIKE`、他DBMSへの移植性を重視するなら `UPPER()` で揃える）。`%` と `_` はパターン中では常にワイルドカードなので、記号そのものを探すにはエスケープが必須です。ユーザーの入力値をそのまま `LIKE` に渡すと `%` 1文字で全件がヒットし検索が実質無効になるため、アプリ側で入力値のエスケープが必要になります。
 
 ---
 
-## 追加問題 2: TIMESTAMP に BETWEEN を使うと終了日が漏れる
+## 問題 14: TIMESTAMP に BETWEEN を使うと終了日が漏れる
 - **目的**: 日時型(`TIMESTAMPTZ`)に対する `BETWEEN` は終端が `00:00:00` として解釈されるため最終日のデータが落ちることを理解し、`>= 開始日 AND < 翌日` という半開区間で書けるようにする。
 
 ### 問題:
@@ -376,6 +467,8 @@ WHERE memo LIKE '%!%%' ESCAPE '!';
 **(3)** 商品と顧客で結果が食い違います。それぞれの `deleted_at` に実際にどんな値が入っているかを確認し、原因を説明してください。
 
 **(4)** 商品・顧客とも正しく1件ずつ返るように、両方のSQLを修正してください。
+
+> **注意**: 本問はすべて `SELECT` のみで、データを変更しません。
 
 ### 解答:
 ```sql
@@ -447,11 +540,12 @@ WHERE deleted_at >= '2023-09-15'
 | ---: | :--- | :--- |
 | 4 | 山田 恵美 | 2023-09-15 10:00:00+09 |
 
-> **解説**: `BETWEEN A AND B` は `>= A AND <= B` と同じで、時刻を省略した日付リテラルは `00:00:00` と解釈されるため、日時型に `BETWEEN` を使うと **終了日の 00:00:00 より後のデータが丸ごと落ちます**（問題8で `created_date` に `BETWEEN` を使えたのは `DATE` 型で時刻を持たないから）。`TIMESTAMP` / `TIMESTAMPTZ` に対する期間指定は `>= 開始日 AND < 翌日` の半開区間で書くのが定石です。`<= '2023-09-20 23:59:59'` と書く回避策も見かけますが、秒未満の値が落ちるうえ精度の違うDBMSへ移すと壊れるため、半開区間の方が安全です。
+### 解説:
+`BETWEEN A AND B` は `>= A AND <= B` と同じで、時刻を省略した日付リテラルは `00:00:00` と解釈されるため、日時型に `BETWEEN` を使うと **終了日の 00:00:00 より後のデータが丸ごと落ちます**（問題 8 で `created_date` に `BETWEEN` を使えたのは `DATE` 型で時刻を持たないから）。`TIMESTAMP` / `TIMESTAMPTZ` に対する期間指定は `>= 開始日 AND < 翌日` の半開区間で書くのが定石です。`<= '2023-09-20 23:59:59'` と書く回避策も見かけますが、秒未満の値が落ちるうえ精度の違うDBMSへ移すと壊れるため、半開区間の方が安全です。
 
 ---
 
-## 追加問題 3: LIMIT / OFFSET のページ送りで行が重複・欠落する
+## 問題 15: LIMIT / OFFSET のページ送りで行が重複・欠落する
 - **目的**: `ORDER BY` のキーが一意でないと `LIMIT` / `OFFSET` によるページ送りで同じ行が2回出たり抜けたりすることを理解し、タイブレークに主キーを加える対処を身につける。
 
 ### 問題:
@@ -462,6 +556,8 @@ WHERE deleted_at >= '2023-09-15'
 **(2)** 1ページ目の3件目と2ページ目の1件目は同じ価格です。商品マスタにこの価格の商品は何件あり、その `product_id` は何番でしょうか。
 
 **(3)** このページ送りには「**同じ商品が両方のページに出る**」または「**どちらのページにも出ない**」という不具合が潜んでいます。なぜそうなるのかを説明し、正しくページ送りできるようにSQLを修正してください。
+
+> **注意**: 本問はすべて `SELECT` のみで、データを変更しません。
 
 ### 解答:
 ```sql
@@ -532,8 +628,7 @@ LIMIT 3 OFFSET 3;
 | 2ページ目 | 8 | USB 充電器 | 1500.00 |
 | 2ページ目 | 6 | オーガニックコーヒー豆 | 1800.00 |
 
-> **解説**: `LIMIT` / `OFFSET` は「並べ終わった結果の何件目から何件」を切り出すだけなので、`ORDER BY` で並び順が一意に決まらなければ取り出される行も決まりません。販売中の商品には 1200円（15 と 20 の表記ゆれ重複）・1800円（13 と 6）・2500円（2 と 19 の完全重複）という同価格ペアが3組あり、境目にこれが来ると重複表示や取りこぼしが起きます。対策は `ORDER BY` の末尾に主キーなど一意な列を必ず足してタイブレークすることです。
+### 解説:
+`LIMIT` / `OFFSET` は「並べ終わった結果の何件目から何件」を切り出すだけなので、`ORDER BY` で並び順が一意に決まらなければ取り出される行も決まりません。販売中の商品には 1200円（15 と 20 の表記ゆれ重複）・1800円（13 と 6）・2500円（2 と 19 の完全重複）という同価格ペアが3組あり、境目にこれが来ると重複表示や取りこぼしが起きます。対策は `ORDER BY` の末尾に主キーなど一意な列を必ず足してタイブレークすることです。
 
 > **⚠️ 講師向けの注意**: (1) の「同じ行が両ページに出る」結果は実行計画に依存するため、環境やデータ量によっては再現しない（たまたま正しく見える）ことがあります。**再現しなくても不具合が無いわけではない**という点が本問の要点なので、その場合は「順序が保証されていない＝いつ壊れてもおかしくない」ことを (2) の同価格ペアから説明してください。
-
-> **注意**: 本問はすべて `SELECT` のみでデータを変更しません。
