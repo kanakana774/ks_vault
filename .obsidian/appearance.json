@@ -1,9 +1,11 @@
 {
   "theme": "moonstone",
   "enabledCssSnippets": [],
-  "cssTheme": "AnuPpuccin",
+  "cssTheme": "Minimal",
   "showViewHeader": true,
   "showRibbon": false,
   "baseFontSizeAction": false,
-  "accentColor": ""
+  "accentColor": "",
+  "baseFontSize": 16,
+  "nativeMenus": false
 }
