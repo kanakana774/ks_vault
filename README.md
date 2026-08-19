@@ -2,12 +2,12 @@
 
 **【所有】個人（kanamaru / 個人GitHub `kanakana774/lecturer-vault`）**
 **【種類】講義準備ノート（Obsidian vault ＝ 1 git repo）**
-**【git】push対象（個人GitHub）。会社公式資料は `Documents/aevic/lecturer-docs` 側**
+**【git】push対象（個人GitHub）。会社公式資料は `MyWork/aevic/lecturer-docs` 側**
 **【開く/寿命】Obsidian / 常設**
 
 ---
 
-研修講師の**自分用カンペ／講義準備**ノート。会社公式の到達点は company の `lecturer-docs`（設計書 §4 の④境界）。設計の全体像は `MyWork/00_運用設計.md`。
+研修講師の**自分用カンペ／講義準備**ノート。会社公式の到達点は company の `lecturer-docs`（設計書 §4 の④境界）。設計の全体像は `MyWork/_base/00_運用設計.md`。
 
 ## ユニット構成
 | フォルダ | 内容 | 構成タイプ |
