@@ -82,6 +82,13 @@ WHERE cardinality(pg_blocking_pids(pid)) > 0;
 
 **「PID 23380 は PID 9452 に待たされている」**と読みます。
 
+> claudeへ
+> これって下記順番で実行して止めておいて、窓Cから確認SQL実行だよね？たぶん窓Bの実行待ちSQLが実行中のSQLで出ないでしょうか？また、待ちの種類はlock以外あるの？
+> |実行するSQL|結果|
+> |:--|:--|
+> |窓A|`BEGIN;` → `UPDATE products SET price = price + 100 WHERE product_id = 1;`|すぐ返る|
+> |窓B|`UPDATE products SET price = price + 50 WHERE product_id = 1;`|**返ってこない**|
+
 ### 1-4. 犯人の状態を見て、必要なら止める
 
 ```sql
@@ -121,10 +128,10 @@ SELECT pg_terminate_backend(9452);  -- 接続ごと切断（トランザクシ�
 
 ### 2-1.【2窓】`UPDATE` 中でも `SELECT` は即座に返る
 
-| | 実行するSQL | 結果 |
-| :--- | :--- | :--- |
-| 窓A | `BEGIN;` → `UPDATE products SET price = 120 WHERE product_id = 1;` | — |
-| 窓B | `SELECT price FROM products WHERE product_id = 1;` | **待たない。1200.00**（書き換え前の値） |
+|     | 実行するSQL                                                            | 結果                        |
+| :-- | :----------------------------------------------------------------- | :------------------------ |
+| 窓A  | `BEGIN;` → `UPDATE products SET price = 120 WHERE product_id = 1;` | —                         |
+| 窓B  | `SELECT price FROM products WHERE product_id = 1;`                 | **待たない。1200.00**（書き換え前の値） |
 
 窓Aが `COMMIT` した後に読むと 120 が返ります。**これが MVCC（多版型同時実行制御）です。**
 
@@ -156,6 +163,7 @@ SELECT pg_terminate_backend(9452);  -- 接続ごと切断（トランザクシ�
 
 > claudeへ
 > 基準の線が全員で共通ってことは、古いtxが何を参照してるかに関わらず、txの古い番号に各行の版の履歴が残るってこと？あほらしくね。
+> また、一本の線という表現が比喩なのかなんなのか、分かりづらいです。実態はシンプルに言えば、何？
 
 > 🐘 MVCC 自体はどのDBにもありますが、Oracle や MySQL は古い版を**別領域（UNDO）に退避**するのでテーブルは膨らみません。**「`VACUUM` が要る」のは PostgreSQL 固有の事情**です。
 
@@ -183,6 +191,9 @@ SELECT pg_terminate_backend(9452);  -- 接続ごと切断（トランザクシ�
 1. 🐘 **PostgreSQL でダーティリードは起きない**（指定してもエラーにならず Read Committed として動く）
 2. 🐘 **Repeatable Read はファントムも防ぐ**（標準より強い）
 
+> claudeへ
+> postgresql独自のことを明示するのは同意ですが、これは覚えて欲しいことではないです。研修生の配属先がどのDB使うか分からないので、あくまで標準SQL以外は覚えてほしいことではない。ただ具体的なこと話さないとならないので、postgresqlで話してる感じです。
+
 > [!example]- 確かめる（READ UNCOMMITTED を指定しても効かない）
 > 窓Aで `BEGIN; UPDATE products SET price = 9999 WHERE product_id = 1;` のまま、窓Bで：
 > ```sql
@@ -192,6 +203,8 @@ SELECT pg_terminate_backend(9452);  -- 接続ごと切断（トランザクシ�
 > ```
 > **指定は通るのに、未確定の 9999 は見えません。**
 
+> claudeへ
+> 題名は、確かめる（READ UNCOMMITTED を指定しても効かない）ではなく、確かめる（postgreSQLではダーティリードは起きない）みたいな方が分かりやすいかなと。自分の認識あってます？
 ### 3-2. READ COMMITTED と REPEATABLE READ
 
 **条件**：窓Aがトランザクションを開いたまま同じ `SELECT` を2回。**その合間に**窓Bが価格を 1200→1300 に更新し、カテゴリ1に1件追加して `COMMIT`。
@@ -203,6 +216,8 @@ SELECT pg_terminate_backend(9452);  -- 接続ごと切断（トランザクシ�
 | ③ | 窓A：**同じ**価格を `SELECT` | **1300**（変わった） | 1200 | 1200 |
 | ④ | 窓A：カテゴリ1の件数を数える | **5**（増えた） | 4 | 4 |
 | ⑤ | 窓A：`COMMIT` | 成功 | 成功 | **落ちることがある**（→ §3-3） |
+> claudeへ
+> これは具体的にどんなSQLを打ってますか？カテゴリ1件追加ってTBLにinsert？更新と挿入のクエリは軽くでいいので書いておいて。日本語より分かりやすい他の表と同じ形式で。表の中にSQL入れる書き方。
 
 **差が出るのは②の後です。** READ COMMITTED は**他がコミットするたびに見える世界が更新され**、REPEATABLE READ 以上は**①の時点の世界を最後まで使います。**
 
@@ -237,6 +252,9 @@ ERROR:  could not serialize access due to concurrent update
 **使うならアプリ側のリトライ処理が必須**です。書かずに上げると繁忙時にエラーが多発します。
 
 > 🐘 SERIALIZABLE はこれに加えて別の仕組みを持っていて、**同じ行を触っていないトランザクション同士でも `COMMIT` の瞬間に落ちる**ことがあります。エラー文も違います。
+
+> claudeへ
+> 結局下で規定のread commitedでいいと
 
 ### 3-4. どれを使うか
 
