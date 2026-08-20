@@ -83,10 +83,10 @@ PSQL="/c/Program Files/PostgreSQL/17/bin/psql.exe"
 - **検証用DBは使い捨て。`tmp_` 接頭辞で作り、終わったら必ず `DROP DATABASE`。**
   講義で使うDB（`sql_lesson_*` など）を検証で汚さない
 - **同じセッションで作ったものは、同じセッションで片付ける。** 残すと何が現役か分からなくなる
-- テーブルとデータは `02_問題/08_結合から使用するテーブル.md` の DDL／テストデータをそのまま流す
+- テーブルとデータは `00_SQL研修/02_問題/08_結合から使用するテーブル.md` の DDL／テストデータをそのまま流す
 - 2窓シナリオは psql をバックグラウンドで並走させれば再現できる
   （`( echo BEGIN; echo UPDATE...; sleep 10; echo COMMIT; ) | psql` で `idle in transaction` が作れる）
-- 手順の詳細は `05_補足/講師用/講義の補足/12_PLpgSQL詳解/README.md` §検証環境の作り方
+- 手順の詳細は `00_SQL研修/03_詳細版/12_PLpgSQL詳解/README.md` §検証環境の作り方
 
 ### 禁止事項
 
